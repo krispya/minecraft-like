@@ -4,6 +4,7 @@ import { Entity } from 'koota';
 import { useActions, useQueryFirst, useTrait, useWorld } from 'koota/react';
 import { useEffect } from 'react';
 import { actions } from './actions';
+import { BoundingBoxDebug } from './bounding-box-debug';
 import { Frameloop } from './frameloop';
 import { Ground, Player, Position, Time } from './traits';
 import { RepeatWrapping } from 'three';
@@ -38,7 +39,12 @@ function PlayerRenderer() {
 
 function PlayerView({ entity }: { entity: Entity }) {
   const position = useTrait(entity, Position) ?? { x: 0, y: 0, z: 0 };
-  return <Capsule args={[0.5, 1.8]} position={[position.x, position.y, position.z]} />;
+  return (
+    <>
+      <Capsule args={[0.5, 1.8]} position={[position.x, position.y, position.z]} />
+      <BoundingBoxDebug entity={entity} />
+    </>
+  );
 }
 
 function GroundRenderer() {
@@ -70,7 +76,7 @@ function Startup() {
       player.destroy();
       ground.destroy();
     };
-  }, []);
+  }, [spawnGround, spawnPlayer]);
 
   return null;
 }

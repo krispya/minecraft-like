@@ -4,6 +4,7 @@ export const Time = trait({ delta: 0, current: 0 });
 
 export const Position = trait({ x: 0, y: 0, z: 0 });
 export const Velocity = trait({ x: 0, y: 0, z: 0 });
+export const BoundingBox = trait({ width: 1, height: 1, depth: 1 });
 
 export const Player = trait();
 export const Ground = trait();
