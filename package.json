@@ -1,0 +1,38 @@
+{
+  "name": "minecraft-like",
+  "description": "Built with 🌹 create-krispya",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --build --noEmit",
+    "typecheck:watch": "tsc --build --watch",
+    "lint": "oxlint -c .config/oxlint.json",
+    "format": "prettier --config .config/prettier.json --ignore-path .config/prettierignore --write ."
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.7.0",
+    "koota": "^0.6.6",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "three": "~0.185.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@types/three": "~0.185.4",
+    "@vitejs/plugin-react": "^6.0.5",
+    "oxlint": "^1.77.0",
+    "oxlint-tsgolint": "^7.0.2001",
+    "prettier": "^3.9.6",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1"
+  },
+  "packageManager": "pnpm@11.20.0",
+  "engines": {
+    "pnpm": ">=11.0.0",
+    "node": ">=26.0.0"
+  }
+}
