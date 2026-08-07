@@ -1,7 +1,7 @@
 import { CameraControls, Capsule, PerspectiveCamera, Sky, useTexture } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { Entity } from 'koota';
-import { useActions, useQueryFirst, useTrait, useWorld } from 'koota/react';
+import { useActions, useQuery, useQueryFirst, useTrait, useWorld } from 'koota/react';
 import { useEffect } from 'react';
 import { actions } from './actions';
 import { BoundingBoxDebug } from './bounding-box-debug';
@@ -33,8 +33,8 @@ export function App() {
 }
 
 function PlayerRenderer() {
-  const player = useQueryFirst(Player, Position);
-  return player ? <PlayerView key={player.id()} entity={player} /> : null;
+  const player = useQuery(Player, Position);
+  return player.map((p) => <PlayerView key={p.id()} entity={p} />);
 }
 
 function PlayerView({ entity }: { entity: Entity }) {
@@ -69,11 +69,17 @@ function Startup() {
   const { spawnPlayer, spawnGround } = useActions(actions);
 
   useEffect(() => {
-    const player = spawnPlayer();
+    const players = Array.from({ length: 10 }, () =>
+      spawnPlayer({
+        x: (Math.random() - 0.5) * 20,
+        y: Math.random() * 10,
+        z: (Math.random() - 0.5) * 20,
+      })
+    );
     const ground = spawnGround();
 
     return () => {
-      player.destroy();
+      for (const player of players) player.destroy();
       ground.destroy();
     };
   }, [spawnGround, spawnPlayer]);

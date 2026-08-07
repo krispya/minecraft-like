@@ -2,8 +2,13 @@ import { createActions } from 'koota';
 import { BoundingBox, Ground, Player, Position, Velocity } from './traits';
 
 export const actions = createActions((world) => ({
-  spawnPlayer: () => {
-    return world.spawn(Player, Position, Velocity, BoundingBox({ width: 1, height: 2.8, depth: 1 }));
+  spawnPlayer: (position = { x: 0, y: 0, z: 0 }) => {
+    return world.spawn(
+      Player,
+      Position(position),
+      Velocity,
+      BoundingBox({ width: 1, height: 2.8, depth: 1 })
+    );
   },
   spawnGround: () => {
     return world.spawn(Ground, Position);
