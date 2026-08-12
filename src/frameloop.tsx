@@ -2,6 +2,7 @@ import type { World } from 'koota';
 import { useEffect } from 'react';
 import { useWorld } from 'koota/react';
 import { applyGravity } from './system/apply-gravity';
+import { applyInput } from './system/apply-input';
 import { moveEntity } from './system/move-entity';
 import { pollKeys } from './system/poll-keys';
 import { resolveGroundCollision } from './system/resolve-ground-collision';
@@ -16,6 +17,7 @@ export function Frameloop() {
   useAnimationFrame(() => {
     updateTime(world);
     pollKeys(world);
+    applyInput(world);
     applyGravity(world);
     moveEntity(world);
     resolveGroundCollision(world);

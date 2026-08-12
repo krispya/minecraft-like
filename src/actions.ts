@@ -1,10 +1,11 @@
 import { createActions } from 'koota';
-import { BoundingBox, Ground, Physical, Player, Position, Velocity } from './traits';
+import { BoundingBox, Ground, Input, Physical, Player, Position, Velocity } from './traits';
 
 export const actions = createActions((world) => ({
   spawnPlayer: (position = { x: 0, y: 0, z: 0 }) => {
     return world.spawn(
       Player,
+      Input,
       Position(position),
       Velocity,
       Physical,
