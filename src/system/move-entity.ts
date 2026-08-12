@@ -1,7 +1,7 @@
 import { World } from 'koota';
 import { Position, Time, Velocity } from '../traits';
 
-export function updatePosition(world: World) {
+export function moveEntity(world: World) {
   const time = world.get(Time)!;
 
   world.query(Position, Velocity).updateEach(([position, velocity]) => {

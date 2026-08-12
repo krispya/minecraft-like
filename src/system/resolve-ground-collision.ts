@@ -1,19 +1,25 @@
 import { World } from 'koota';
-import { BoundingBox, Ground, Position, Velocity } from '../traits';
+import { BoundingBox, Ground, IsGrounded, Physical, Position, Velocity } from '../traits';
 
 export function resolveGroundCollision(world: World) {
-  const ground = world.queryFirst(Ground, Position);
-  if (!ground) return;
+  const groundPosition = world.queryFirst(Ground, Position)?.get(Position);
 
-  const groundPosition = ground.get(Position)!;
+  world
+    .query(Physical, Position, Velocity, BoundingBox)
+    .select(Position, Velocity, BoundingBox)
+    .updateEach(([position, velocity, boundingBox], entity) => {
+      const halfHeight = boundingBox.height / 2;
+      const bottom = position.y - halfHeight;
+      const isGrounded = groundPosition !== undefined && bottom <= groundPosition.y;
 
-  world.query(Position, Velocity, BoundingBox).updateEach(([position, velocity, boundingBox]) => {
-    const halfHeight = boundingBox.height / 2;
-    const bottom = position.y - halfHeight;
+      if (!isGrounded) {
+        entity.remove(IsGrounded);
+        return;
+      }
 
-    if (bottom >= groundPosition.y) return;
+      entity.add(IsGrounded);
 
-    position.y = groundPosition.y + halfHeight;
-    if (velocity.y < 0) velocity.y = 0;
-  });
+      if (bottom < groundPosition.y) position.y = groundPosition.y + halfHeight;
+      if (velocity.y < 0) velocity.y = 0;
+    });
 }

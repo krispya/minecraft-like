@@ -1,7 +1,7 @@
 import { useWorld } from 'koota/react';
 import { applyGravity } from './system/apply-gravity';
 import { resolveGroundCollision } from './system/resolve-ground-collision';
-import { updatePosition } from './system/update-position';
+import { moveEntity } from './system/move-entity';
 import { updateTime } from './system/update-time';
 import { useAnimationFrame } from './utils/use-animation-frame';
 
@@ -11,7 +11,7 @@ export function Frameloop() {
   useAnimationFrame(() => {
     updateTime(world);
     applyGravity(world);
-    updatePosition(world);
+    moveEntity(world);
     resolveGroundCollision(world);
   });
 
