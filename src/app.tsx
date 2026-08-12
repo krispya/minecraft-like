@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { actions } from './actions';
 import { BoundingBoxDebug } from './bounding-box-debug';
 import { Frameloop } from './frameloop';
-import { Ground, Player, Position, Time } from './traits';
+import { Ground, Keys, Player, Position, Time } from './traits';
 import { RepeatWrapping } from 'three';
 
 import grassImg from './assets/grass.jpg';
@@ -28,6 +28,7 @@ export function App() {
       <Startup />
 
       <Clock />
+      <KeysView />
     </>
   );
 }
@@ -97,6 +98,19 @@ function Clock() {
     <div style={{ position: 'absolute', top: 0, left: 0, color: 'white' }}>
       <div>Current Time: {time.current.toFixed(2)} s</div>
       <div>Delta Time: {(time.delta * 1000).toFixed(4)} ms</div>
+    </div>
+  );
+}
+
+function KeysView() {
+  const world = useWorld();
+  const keys = useTrait(world, Keys);
+
+  if (!keys) return null;
+
+  return (
+    <div style={{ position: 'absolute', top: 50, left: 0, color: 'white' }}>
+      <div>Pressed Keys: {Array.from(keys).join(', ')}</div>
     </div>
   );
 }

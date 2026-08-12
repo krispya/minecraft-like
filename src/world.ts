@@ -1,4 +1,4 @@
 import { createWorld } from 'koota';
-import { Time } from './traits';
+import { Keys, Time } from './traits';
 
-export const world = createWorld(Time);
+export const world = createWorld(Time, Keys);
