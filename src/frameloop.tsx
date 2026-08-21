@@ -16,7 +16,11 @@ export function Frameloop() {
 
   useAnimationFrame(() => {
     updateTime(world);
+    // Poll input: What is the keyboard doing?
     pollKeys(world);
+    // Calculate movement. Where am I moving?
+
+    // Apply movement. Okay turn movement vectors into velocity
     applyInput(world);
     applyGravity(world);
     moveEntity(world);

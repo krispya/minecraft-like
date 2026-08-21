@@ -1,6 +1,6 @@
 import { Entity } from 'koota';
 import { useTrait } from 'koota/react';
-import { BoundingBox, Position } from './traits';
+import { BoundingBox, Position } from '../traits';
 
 export function BoundingBoxDebug({ entity }: { entity: Entity }) {
   const boundingBox = useTrait(entity, BoundingBox);

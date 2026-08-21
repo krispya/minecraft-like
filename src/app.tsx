@@ -1,15 +1,13 @@
-import { CameraControls, Capsule, PerspectiveCamera, Sky, useTexture } from '@react-three/drei';
+import { CameraControls, PerspectiveCamera, Sky } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import { Entity } from 'koota';
-import { useActions, useQuery, useQueryFirst, useTrait, useWorld } from 'koota/react';
+import { useActions, useTrait, useWorld } from 'koota/react';
 import { useEffect } from 'react';
 import { actions } from './actions';
-import { BoundingBoxDebug } from './bounding-box-debug';
 import { Frameloop } from './frameloop';
-import { Ground, Keys, Player, Position, Time } from './traits';
-import { RepeatWrapping } from 'three';
+import { Keys, Time } from './traits';
 
-import grassImg from './assets/grass.jpg';
+import { GroundRenderer } from './view/ground-renderer';
+import { PlayerRenderer } from './view/player-renderer';
 
 export function App() {
   return (
@@ -18,8 +16,11 @@ export function App() {
         <Sky sunPosition={[100, 20, 100]} />
         <ambientLight intensity={0.3 * Math.PI} />
         <pointLight castShadow intensity={0.8 * Math.PI} decay={0} position={[100, 100, 100]} />
+
         <PerspectiveCamera makeDefault position={[0, 10, 0]} />
         <CameraControls />
+
+        {/* Renderers */}
         <PlayerRenderer />
         <GroundRenderer />
       </Canvas>
@@ -30,39 +31,6 @@ export function App() {
       <Clock />
       <KeysView />
     </>
-  );
-}
-
-function PlayerRenderer() {
-  const player = useQuery(Player, Position);
-  return player.map((p) => <PlayerView key={p.id()} entity={p} />);
-}
-
-function PlayerView({ entity }: { entity: Entity }) {
-  const position = useTrait(entity, Position) ?? { x: 0, y: 0, z: 0 };
-  return (
-    <>
-      <Capsule args={[0.5, 1.8]} position={[position.x, position.y, position.z]} />
-      <BoundingBoxDebug entity={entity} />
-    </>
-  );
-}
-
-function GroundRenderer() {
-  const ground = useQueryFirst(Ground, Position);
-  return ground ? <GroundView key={ground.id()} entity={ground} /> : null;
-}
-
-function GroundView({ entity }: { entity: Entity }) {
-  const texture = useTexture(grassImg);
-  texture.wrapS = texture.wrapT = RepeatWrapping;
-  const position = useTrait(entity, Position) ?? { x: 0, y: 0, z: 0 };
-
-  return (
-    <mesh receiveShadow position={[position.x, position.y, position.z]} rotation-x={-Math.PI / 2}>
-      <planeGeometry args={[1000, 1000]} />
-      <meshStandardMaterial map={texture} map-repeat={[240, 240]} color="green" />
-    </mesh>
   );
 }
 
