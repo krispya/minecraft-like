@@ -1,7 +1,7 @@
 import type { World } from 'koota';
 import { Input, Keys, Player } from '../traits';
 
-export function pollKeys(world: World) {
+export function updatePlayerMovement(world: World) {
   const keys = world.get(Keys)!;
 
   world.query(Player, Input).updateEach(([input]) => {
@@ -10,8 +10,7 @@ export function pollKeys(world: World) {
     const up = keys.has('arrowup') || keys.has('w');
     const down = keys.has('arrowdown') || keys.has('s');
 
-    // Normalize the input vectors so diagonals don't
-    // have a larger length than 1
+    // Prevent faster diagonal movement.
     const x = Number(right) - Number(left);
     const y = Number(up) - Number(down);
     const length = Math.hypot(x, y) || 1;

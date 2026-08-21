@@ -2,7 +2,6 @@ import { Sky } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { useActions, useTrait, useWorld } from 'koota/react';
 import { useEffect } from 'react';
-import { Vector3 } from 'three';
 import { actions } from './actions';
 import { Frameloop } from './frameloop';
 import { Keys, Time } from './traits';
@@ -19,7 +18,6 @@ export function App() {
         <ambientLight intensity={0.3 * Math.PI} />
         <pointLight castShadow intensity={0.8 * Math.PI} decay={0} position={[100, 100, 100]} />
 
-        {/* Renderers */}
         <PlayerRenderer />
         <GroundRenderer />
         <CameraRenderer />
@@ -40,16 +38,12 @@ function Startup() {
   useEffect(() => {
     const players = Array.from({ length: 10 }, () =>
       spawnPlayer({
-        position: new Vector3(
-          (Math.random() - 0.5) * 20,
-          Math.random() * 10,
-          (Math.random() - 0.5) * 20
-        ),
+        position: [(Math.random() - 0.5) * 20, Math.random() * 10, (Math.random() - 0.5) * 20],
       })
     );
 
     const ground = spawnGround();
-    const camera = spawnCamera({ position: new Vector3(0, 2, 10) });
+    const camera = spawnCamera({ orbit: { damping: 8 } });
 
     return () => {
       for (const player of players) player.destroy();
