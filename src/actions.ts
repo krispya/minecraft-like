@@ -1,4 +1,5 @@
 import { createActions } from 'koota';
+import { Quaternion, Vector3 } from 'three';
 import {
   BoundingBox,
   Camera,
@@ -12,7 +13,7 @@ import {
 } from './traits';
 
 export const actions = createActions((world) => ({
-  spawnPlayer: ({ position = { x: 0, y: 0, z: 0 }, rotation = { x: 0, y: 0, z: 0, w: 0 } } = {}) => {
+  spawnPlayer: ({ position = new Vector3(), rotation = new Quaternion() } = {}) => {
     return world.spawn(
       Player,
       Input,
@@ -26,7 +27,7 @@ export const actions = createActions((world) => ({
   spawnGround: () => {
     return world.spawn(Ground, Position, Physical);
   },
-  spawnCamera: ({ position = { x: 0, y: 0, z: 0 }, rotation = { x: 0, y: 0, z: 0, w: 0 } } = {}) => {
+  spawnCamera: ({ position = new Vector3(), rotation = new Quaternion() } = {}) => {
     return world.spawn(Camera, Position(position), Rotation(rotation));
   },
 }));

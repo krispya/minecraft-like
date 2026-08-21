@@ -10,10 +10,11 @@ export function PlayerRenderer() {
 }
 
 function PlayerView({ entity }: { entity: Entity }) {
-  const position = useTrait(entity, Position) ?? { x: 0, y: 0, z: 0 };
+  const position = useTrait(entity, Position);
+
   return (
     <>
-      <Capsule args={[0.5, 1.8]} position={[position.x, position.y, position.z]} />
+      <Capsule args={[0.5, 1.8]} position={position} />
       <BoundingBoxDebug entity={entity} />
     </>
   );

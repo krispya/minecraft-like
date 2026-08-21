@@ -14,10 +14,10 @@ export function GroundRenderer() {
 function GroundView({ entity }: { entity: Entity }) {
   const texture = useTexture(grassImg);
   texture.wrapS = texture.wrapT = RepeatWrapping;
-  const position = useTrait(entity, Position) ?? { x: 0, y: 0, z: 0 };
+  const position = useTrait(entity, Position);
 
   return (
-    <mesh receiveShadow position={[position.x, position.y, position.z]} rotation-x={-Math.PI / 2}>
+    <mesh receiveShadow position={position} rotation-x={-Math.PI / 2}>
       <planeGeometry args={[1000, 1000]} />
       <meshStandardMaterial map={texture} map-repeat={[240, 240]} color="green" />
     </mesh>
