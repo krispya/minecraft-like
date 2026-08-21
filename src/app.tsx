@@ -1,4 +1,4 @@
-import { CameraControls, PerspectiveCamera, Sky } from '@react-three/drei';
+import { Sky } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { useActions, useTrait, useWorld } from 'koota/react';
 import { useEffect } from 'react';
@@ -6,6 +6,7 @@ import { actions } from './actions';
 import { Frameloop } from './frameloop';
 import { Keys, Time } from './traits';
 
+import { CameraRenderer } from './view/camera-renderer';
 import { GroundRenderer } from './view/ground-renderer';
 import { PlayerRenderer } from './view/player-renderer';
 
@@ -17,12 +18,10 @@ export function App() {
         <ambientLight intensity={0.3 * Math.PI} />
         <pointLight castShadow intensity={0.8 * Math.PI} decay={0} position={[100, 100, 100]} />
 
-        <PerspectiveCamera makeDefault position={[0, 10, 0]} />
-        <CameraControls />
-
         {/* Renderers */}
         <PlayerRenderer />
         <GroundRenderer />
+        <CameraRenderer />
       </Canvas>
 
       <Frameloop />
@@ -35,23 +34,28 @@ export function App() {
 }
 
 function Startup() {
-  const { spawnPlayer, spawnGround } = useActions(actions);
+  const { spawnPlayer, spawnGround, spawnCamera } = useActions(actions);
 
   useEffect(() => {
     const players = Array.from({ length: 10 }, () =>
       spawnPlayer({
-        x: (Math.random() - 0.5) * 20,
-        y: Math.random() * 10,
-        z: (Math.random() - 0.5) * 20,
+        position: {
+          x: (Math.random() - 0.5) * 20,
+          y: Math.random() * 10,
+          z: (Math.random() - 0.5) * 20,
+        },
       })
     );
+
     const ground = spawnGround();
+    const camera = spawnCamera({ position: { x: 0, y: 2, z: 10 } });
 
     return () => {
       for (const player of players) player.destroy();
       ground.destroy();
+      camera.destroy();
     };
-  }, [spawnGround, spawnPlayer]);
+  }, [spawnGround, spawnPlayer, spawnCamera]);
 
   return null;
 }

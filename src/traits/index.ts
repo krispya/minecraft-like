@@ -6,6 +6,7 @@ export const Keys = trait(() => new Set<string>());
 export const Input = trait({ x: 0, y: 0 });
 
 export const Position = trait({ x: 0, y: 0, z: 0 });
+export const Rotation = trait({ x: 0, y: 0, z: 0, w: 0 }); // Quaternion
 export const Velocity = trait({ x: 0, y: 0, z: 0 });
 
 // Physical
