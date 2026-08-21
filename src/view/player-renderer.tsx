@@ -1,6 +1,7 @@
 import { Capsule } from '@react-three/drei';
 import { Entity } from 'koota';
 import { useQuery, useTrait } from 'koota/react';
+import { ComponentRef, useRef } from 'react';
 import { Player, Position } from '../traits';
 import { BoundingBoxDebug } from './bounding-box-debug';
 
@@ -10,11 +11,12 @@ export function PlayerRenderer() {
 }
 
 function PlayerView({ entity }: { entity: Entity }) {
+  const ref = useRef<ComponentRef<typeof Capsule>>(null);
   const position = useTrait(entity, Position);
 
   return (
     <>
-      <Capsule args={[0.5, 1.8]} position={position} />
+      <Capsule ref={ref} args={[0.5, 1.8]} position={position?.toArray()} />
       <BoundingBoxDebug entity={entity} />
     </>
   );

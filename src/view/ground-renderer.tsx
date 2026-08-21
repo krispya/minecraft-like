@@ -17,7 +17,7 @@ function GroundView({ entity }: { entity: Entity }) {
   const position = useTrait(entity, Position);
 
   return (
-    <mesh receiveShadow position={position} rotation-x={-Math.PI / 2}>
+    <mesh receiveShadow position={position?.toArray()} rotation-x={-Math.PI / 2}>
       <planeGeometry args={[1000, 1000]} />
       <meshStandardMaterial map={texture} map-repeat={[240, 240]} color="green" />
     </mesh>

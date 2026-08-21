@@ -9,7 +9,7 @@ export function BoundingBoxDebug({ entity }: { entity: Entity }) {
   if (!boundingBox || !position) return null;
 
   return (
-    <mesh position={[position.x, position.y, position.z]} renderOrder={1}>
+    <mesh position={position.toArray()} renderOrder={1}>
       <boxGeometry args={[boundingBox.width, boundingBox.height, boundingBox.depth]} />
       <meshBasicMaterial color="red" depthTest={false} transparent wireframe />
     </mesh>
