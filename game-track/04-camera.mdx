@@ -1,0 +1,370 @@
+---
+title: Camera
+description: Make the camera an entity in the world, driven by traits.
+nav: 4
+---
+
+So far the camera has been configured once on the `Canvas` and never touched again. But a game camera *moves* — and in our architecture, things that move are entities driven by systems. In this chapter we turn the camera into an entity with `Position` and `Rotation` traits and render it with a `CameraRenderer`, setting the stage for the orbit controller in the next chapter.
+
+<Sandpack codeViewer
+  template="react-ts"
+  customSetup={{
+    dependencies: {
+      'react': '^19.2.0',
+      'react-dom': '^19.2.0',
+      'three': '~0.185.1',
+      '@react-three/fiber': 'latest',
+      '@react-three/drei': 'latest',
+      'koota': 'latest'
+    },
+  }}
+  files={{
+    '/styles.css': `body {
+  margin: 0;
+}
+`,
+    '/index.tsx': `import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { WorldProvider } from 'koota/react';
+import './styles.css';
+import App from './App';
+import { world } from './world';
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <WorldProvider world={world}>
+      <App />
+    </WorldProvider>
+  </StrictMode>
+);
+`,
+    '/world.ts': `import { createWorld } from 'koota';
+import { Time } from './traits';
+
+export const world = createWorld(Time);
+`,
+    '/traits.ts': `import { trait } from 'koota';
+import { Quaternion, Vector3 } from 'three';
+
+export const Time = trait({ delta: 0, current: 0 });
+
+export const Position = trait(() => new Vector3());
+export const Rotation = trait(() => new Quaternion());
+
+export const Player = trait();
+export const Ground = trait();
+
+export const Camera = trait();
+`,
+    '/actions.ts': `import { createActions } from 'koota';
+import { Matrix4, Quaternion, Vector3 } from 'three';
+import { Camera, Ground, Player, Position, Rotation } from './traits';
+
+export const actions = createActions((world) => ({
+  spawnPlayer: ({ position = [0, 0, 0] } = {}) => {
+    return world.spawn(
+      Player,
+      Position(new Vector3(position[0], position[1], position[2]))
+    );
+  },
+  spawnGround: () => {
+    return world.spawn(Ground, Position);
+  },
+  spawnCamera: ({ position = [15, 15, 15], target = [0, 2, 0] } = {}) => {
+    const pos = new Vector3(position[0], position[1], position[2]);
+    const matrix = new Matrix4().lookAt(
+      pos,
+      new Vector3(target[0], target[1], target[2]),
+      new Vector3(0, 1, 0)
+    );
+
+    return world.spawn(
+      Camera,
+      Position(pos),
+      Rotation(new Quaternion().setFromRotationMatrix(matrix))
+    );
+  },
+}));
+`,
+    '/utils/use-animation-frame.ts': `import { useEffect, useEffectEvent } from 'react';
+
+type Callback = (dt: number) => void;
+
+export function useAnimationFrame(callback: Callback) {
+  const onFrame = useEffectEvent((dt: number) => callback(dt));
+
+  useEffect(() => {
+    let lastTime = performance.now();
+    let requestId = 0;
+
+    const handleFrame = (time: number) => {
+      const dt = (time - lastTime) / 1000;
+      lastTime = time;
+      onFrame(dt);
+      requestId = requestAnimationFrame(handleFrame);
+    };
+
+    requestId = requestAnimationFrame(handleFrame);
+
+    return () => {
+      cancelAnimationFrame(requestId);
+    };
+  }, []);
+}
+`,
+    '/systems/update-time.ts': `import { World } from 'koota';
+import { Time } from '../traits';
+
+export function updateTime(world: World) {
+  const time = world.get(Time)!;
+
+  if (time.current === 0) time.current = performance.now();
+
+  const now = performance.now();
+  const delta = now - time.current;
+
+  time.delta = Math.min(delta / 1000, 1 / 30);
+  time.current = now;
+
+  world.set(Time, time);
+}
+`,
+    '/frameloop.tsx': `import { useWorld } from 'koota/react';
+import { updateTime } from './systems/update-time';
+import { useAnimationFrame } from './utils/use-animation-frame';
+
+export function Frameloop() {
+  const world = useWorld();
+
+  useAnimationFrame(() => {
+    updateTime(world);
+  });
+
+  return null;
+}
+`,
+    '/view/camera-renderer.tsx': `import { PerspectiveCamera } from '@react-three/drei';
+import { Entity } from 'koota';
+import { useQuery, useTrait } from 'koota/react';
+import { Camera, Position, Rotation } from '../traits';
+
+export function CameraRenderer() {
+  const cameras = useQuery(Camera, Position, Rotation);
+  return cameras.map((entity) => <CameraView key={entity.id()} entity={entity} />);
+}
+
+function CameraView({ entity }: { entity: Entity }) {
+  const position = useTrait(entity, Position);
+  const rotation = useTrait(entity, Rotation);
+
+  return (
+    <PerspectiveCamera makeDefault position={position?.toArray()} quaternion={rotation?.toArray()} />
+  );
+}
+`,
+    '/view/ground-renderer.tsx': `import { useTexture } from '@react-three/drei';
+import { Entity } from 'koota';
+import { useQueryFirst, useTrait } from 'koota/react';
+import { RepeatWrapping } from 'three';
+import { Ground, Position } from '../traits';
+
+const grassImg = 'https://raw.githubusercontent.com/krispya/minecraft-like/main/src/assets/grass.jpg';
+
+export function GroundRenderer() {
+  const ground = useQueryFirst(Ground, Position);
+  return ground ? <GroundView key={ground.id()} entity={ground} /> : null;
+}
+
+function GroundView({ entity }: { entity: Entity }) {
+  const texture = useTexture(grassImg);
+  texture.wrapS = texture.wrapT = RepeatWrapping;
+  const position = useTrait(entity, Position);
+
+  return (
+    <mesh receiveShadow position={position?.toArray()} rotation-x={-Math.PI / 2}>
+      <planeGeometry args={[1000, 1000]} />
+      <meshStandardMaterial map={texture} map-repeat={[240, 240]} color="green" />
+    </mesh>
+  );
+}
+`,
+    '/view/player-renderer.tsx': `import { Capsule } from '@react-three/drei';
+import { Entity } from 'koota';
+import { useQuery, useTrait } from 'koota/react';
+import { Player, Position } from '../traits';
+
+export function PlayerRenderer() {
+  const players = useQuery(Player, Position);
+  return players.map((p) => <PlayerView key={p.id()} entity={p} />);
+}
+
+function PlayerView({ entity }: { entity: Entity }) {
+  const position = useTrait(entity, Position);
+
+  return <Capsule args={[0.5, 1.8]} position={position?.toArray()} />;
+}
+`,
+    '/App.tsx': `import { Sky } from '@react-three/drei';
+import { Canvas } from '@react-three/fiber';
+import { useActions, useTrait, useWorld } from 'koota/react';
+import { useEffect } from 'react';
+import { actions } from './actions';
+import { Frameloop } from './frameloop';
+import { Time } from './traits';
+import { CameraRenderer } from './view/camera-renderer';
+import { GroundRenderer } from './view/ground-renderer';
+import { PlayerRenderer } from './view/player-renderer';
+
+export default function App() {
+  return (
+    <>
+      <Canvas shadows camera={{ fov: 45 }} style={{ position: 'absolute', inset: 0 }}>
+        <Sky sunPosition={[100, 20, 100]} />
+        <ambientLight intensity={0.3 * Math.PI} />
+        <pointLight castShadow intensity={0.8 * Math.PI} decay={0} position={[100, 100, 100]} />
+
+        <PlayerRenderer />
+        <GroundRenderer />
+        <CameraRenderer />
+      </Canvas>
+
+      <Frameloop />
+      <Startup />
+
+      <Clock />
+    </>
+  );
+}
+
+function Startup() {
+  const { spawnPlayer, spawnGround, spawnCamera } = useActions(actions);
+
+  useEffect(() => {
+    const player = spawnPlayer({ position: [0, 1.4, 0] });
+    const ground = spawnGround();
+    const camera = spawnCamera();
+
+    return () => {
+      player.destroy();
+      ground.destroy();
+      camera.destroy();
+    };
+  }, [spawnPlayer, spawnGround, spawnCamera]);
+
+  return null;
+}
+
+function Clock() {
+  const world = useWorld();
+  const time = useTrait(world, Time);
+
+  if (!time) return null;
+
+  return (
+    <div style={{ position: 'absolute', top: 0, left: 0, color: 'white' }}>
+      <div>Current Time: {time.current.toFixed(2)} s</div>
+      <div>Delta Time: {(time.delta * 1000).toFixed(4)} ms</div>
+    </div>
+  );
+}
+`}}/>
+
+## Why make the camera an entity?
+
+Until now the camera has been a `Canvas` prop — configured once and forgotten. That works for a static viewpoint, but our camera will orbit the player, follow movement, and respond to input. In our architecture, anything that changes over time is world state that **systems** update and **renderers** draw. So the camera becomes an entity just like the player.
+
+Two new traits:
+
+```tsx
+// traits.ts
+export const Rotation = trait(() => new Quaternion());
+
+export const Camera = trait();
+```
+
+`Rotation` is a quaternion (three.js's preferred rotation format — no gimbal lock), and `Camera` is another tag trait.
+
+## The spawnCamera action
+
+The camera spawns at a fixed position, rotated to look at a target point just above the player's feet. We compute the rotation with a `lookAt` matrix:
+
+```tsx
+// actions.ts
+spawnCamera: ({ position = [15, 15, 15], target = [0, 2, 0] } = {}) => {
+  const pos = new Vector3(position[0], position[1], position[2]);
+  const matrix = new Matrix4().lookAt(
+    pos,
+    new Vector3(target[0], target[1], target[2]),
+    new Vector3(0, 1, 0)
+  );
+
+  return world.spawn(
+    Camera,
+    Position(pos),
+    Rotation(new Quaternion().setFromRotationMatrix(matrix))
+  );
+},
+```
+
+`Matrix4.lookAt(eye, target, up)` builds the orientation that points from `eye` toward `target`, and `setFromRotationMatrix` extracts it as a quaternion. This same eye/target/up math powers the orbit controller in the next chapter.
+
+## The CameraRenderer
+
+Same renderer pattern as the player and ground — query the world, draw with R3F:
+
+```tsx
+// view/camera-renderer.tsx
+import { PerspectiveCamera } from '@react-three/drei';
+import { Entity } from 'koota';
+import { useQuery, useTrait } from 'koota/react';
+import { Camera, Position, Rotation } from '../traits';
+
+export function CameraRenderer() {
+  const cameras = useQuery(Camera, Position, Rotation);
+  return cameras.map((entity) => <CameraView key={entity.id()} entity={entity} />);
+}
+
+function CameraView({ entity }: { entity: Entity }) {
+  const position = useTrait(entity, Position);
+  const rotation = useTrait(entity, Rotation);
+
+  return (
+    <PerspectiveCamera makeDefault position={position?.toArray()} quaternion={rotation?.toArray()} />
+  );
+}
+```
+
+Drei's `PerspectiveCamera` with `makeDefault` replaces the `Canvas` default camera as the active one. Its position and orientation now come entirely from the entity's traits — whenever a system writes to `Position` or `Rotation`, `useTrait` re-renders the view and the camera moves.
+
+## Wiring it up
+
+Add `<CameraRenderer />` inside the `Canvas` and spawn the camera in `Startup`:
+
+```tsx
+function Startup() {
+  const { spawnPlayer, spawnGround, spawnCamera } = useActions(actions);
+
+  useEffect(() => {
+    const player = spawnPlayer({ position: [0, 1.4, 0] });
+    const ground = spawnGround();
+    const camera = spawnCamera();
+
+    return () => {
+      player.destroy();
+      ground.destroy();
+      camera.destroy();
+    };
+  }, [spawnPlayer, spawnGround, spawnCamera]);
+
+  return null;
+}
+```
+
+Since the entity camera is now the default, we can drop the `position` from the `Canvas` `camera` prop:
+
+```tsx
+<Canvas shadows camera={{ fov: 45 }} style={{ position: 'absolute', inset: 0 }}>
+```
+
+Visually nothing dramatic changed — the camera is still fixed, looking at the player. But architecturally everything changed: the camera is now data in the world, which means systems can drive it. That's exactly what we do next with the orbit controller.
+
