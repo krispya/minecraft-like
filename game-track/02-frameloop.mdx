@@ -1,0 +1,301 @@
+---
+title: Frameloop
+description: Introduce the game loop, create time, and put a clock on the screen.
+nav: 2
+---
+
+Games are simulations that update every frame. In this chapter we introduce the **frameloop** — the heartbeat that runs our game logic — along with our first piece of game state: **time**. To store that state we bring in [koota](https://github.com/pmndrs/koota), a small ECS (Entity Component System) library that will hold our entire game world. We finish by rendering a clock on screen to prove the loop is running.
+
+<Sandpack codeViewer
+  template="react-ts"
+  customSetup={{
+    dependencies: {
+      'react': '^19.2.0',
+      'react-dom': '^19.2.0',
+      'three': '~0.185.1',
+      '@react-three/fiber': 'latest',
+      '@react-three/drei': 'latest',
+      'koota': 'latest'
+    },
+  }}
+  files={{
+    '/styles.css': `body {
+  margin: 0;
+}
+`,
+    '/index.tsx': `import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { WorldProvider } from 'koota/react';
+import './styles.css';
+import App from './App';
+import { world } from './world';
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <WorldProvider world={world}>
+      <App />
+    </WorldProvider>
+  </StrictMode>
+);
+`,
+    '/world.ts': `import { createWorld } from 'koota';
+import { Time } from './traits';
+
+export const world = createWorld(Time);
+`,
+    '/traits.ts': `import { trait } from 'koota';
+
+export const Time = trait({ delta: 0, current: 0 });
+`,
+    '/utils/use-animation-frame.ts': `import { useEffect, useEffectEvent } from 'react';
+
+type Callback = (dt: number) => void;
+
+export function useAnimationFrame(callback: Callback) {
+  const onFrame = useEffectEvent((dt: number) => callback(dt));
+
+  useEffect(() => {
+    let lastTime = performance.now();
+    let requestId = 0;
+
+    const handleFrame = (time: number) => {
+      const dt = (time - lastTime) / 1000;
+      lastTime = time;
+      onFrame(dt);
+      requestId = requestAnimationFrame(handleFrame);
+    };
+
+    requestId = requestAnimationFrame(handleFrame);
+
+    return () => {
+      cancelAnimationFrame(requestId);
+    };
+  }, []);
+}
+`,
+    '/systems/update-time.ts': `import { World } from 'koota';
+import { Time } from '../traits';
+
+export function updateTime(world: World) {
+  const time = world.get(Time)!;
+
+  if (time.current === 0) time.current = performance.now();
+
+  const now = performance.now();
+  const delta = now - time.current;
+
+  time.delta = Math.min(delta / 1000, 1 / 30);
+  time.current = now;
+
+  world.set(Time, time);
+}
+`,
+    '/frameloop.tsx': `import { useWorld } from 'koota/react';
+import { updateTime } from './systems/update-time';
+import { useAnimationFrame } from './utils/use-animation-frame';
+
+export function Frameloop() {
+  const world = useWorld();
+
+  useAnimationFrame(() => {
+    updateTime(world);
+  });
+
+  return null;
+}
+`,
+    '/App.tsx': `import { Sky, useTexture } from '@react-three/drei';
+import { Canvas } from '@react-three/fiber';
+import { useTrait, useWorld } from 'koota/react';
+import { RepeatWrapping } from 'three';
+import { Frameloop } from './frameloop';
+import { Time } from './traits';
+
+const grassImg = 'https://raw.githubusercontent.com/krispya/minecraft-like/main/src/assets/grass.jpg';
+
+export default function App() {
+  return (
+    <>
+      <Canvas
+        shadows
+        camera={{ fov: 45, position: [10, 10, 10] }}
+        style={{ position: 'absolute', inset: 0 }}
+      >
+        <Sky sunPosition={[100, 20, 100]} />
+        <ambientLight intensity={0.3 * Math.PI} />
+        <pointLight castShadow intensity={0.8 * Math.PI} decay={0} position={[100, 100, 100]} />
+
+        <Ground />
+      </Canvas>
+
+      <Frameloop />
+      <Clock />
+    </>
+  );
+}
+
+function Ground() {
+  const texture = useTexture(grassImg);
+  texture.wrapS = texture.wrapT = RepeatWrapping;
+
+  return (
+    <mesh receiveShadow rotation-x={-Math.PI / 2}>
+      <planeGeometry args={[1000, 1000]} />
+      <meshStandardMaterial map={texture} map-repeat={[240, 240]} color="green" />
+    </mesh>
+  );
+}
+
+function Clock() {
+  const world = useWorld();
+  const time = useTrait(world, Time);
+
+  if (!time) return null;
+
+  return (
+    <div style={{ position: 'absolute', top: 0, left: 0, color: 'white' }}>
+      <div>Current Time: {time.current.toFixed(2)} s</div>
+      <div>Delta Time: {(time.delta * 1000).toFixed(4)} ms</div>
+    </div>
+  );
+}
+`}}/>
+
+## Why a frameloop?
+
+React Three Fiber has its own render loop (`useFrame`), but we want our **game logic to be independent of rendering**. Systems like physics, input, and camera movement shouldn't live inside three.js components — they operate on the game world, and renderers just draw whatever state the world is in. So we run our own loop with `requestAnimationFrame`, wrapped in a reusable hook:
+
+```tsx
+// utils/use-animation-frame.ts
+import { useEffect, useEffectEvent } from 'react';
+
+type Callback = (dt: number) => void;
+
+export function useAnimationFrame(callback: Callback) {
+  const onFrame = useEffectEvent((dt: number) => callback(dt));
+
+  useEffect(() => {
+    let lastTime = performance.now();
+    let requestId = 0;
+
+    const handleFrame = (time: number) => {
+      const dt = (time - lastTime) / 1000;
+      lastTime = time;
+      onFrame(dt);
+      requestId = requestAnimationFrame(handleFrame);
+    };
+
+    requestId = requestAnimationFrame(handleFrame);
+
+    return () => {
+      cancelAnimationFrame(requestId);
+    };
+  }, []);
+}
+```
+
+`useEffectEvent` lets the loop always call the latest callback without re-subscribing the effect. The cleanup cancels the frame request when the component unmounts.
+
+## Creating the world and the Time trait
+
+To store game state we create a koota **world**. A world holds entities and **traits** — small typed pieces of data. Traits can also be attached to the world itself for global state, which is perfect for time:
+
+```tsx
+// traits.ts
+import { trait } from 'koota';
+
+export const Time = trait({ delta: 0, current: 0 });
+```
+
+```tsx
+// world.ts
+import { createWorld } from 'koota';
+import { Time } from './traits';
+
+export const world = createWorld(Time);
+```
+
+We make the world available to all React components by wrapping the app in a `WorldProvider`:
+
+```tsx
+// index.tsx
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <WorldProvider world={world}>
+      <App />
+    </WorldProvider>
+  </StrictMode>
+);
+```
+
+## Our first system: updateTime
+
+A **system** is just a function that reads and writes world state. `updateTime` runs first every frame and computes how much time passed since the last frame:
+
+```tsx
+// systems/update-time.ts
+import { World } from 'koota';
+import { Time } from '../traits';
+
+export function updateTime(world: World) {
+  const time = world.get(Time)!;
+
+  if (time.current === 0) time.current = performance.now();
+
+  const now = performance.now();
+  const delta = now - time.current;
+
+  time.delta = Math.min(delta / 1000, 1 / 30);
+  time.current = now;
+
+  world.set(Time, time);
+}
+```
+
+Two details worth noting:
+
+- `time.delta` is converted to **seconds**, so all our movement math later reads naturally (units per second).
+- We clamp delta to `1/30` of a second. If the tab is backgrounded and comes back, `requestAnimationFrame` can report a huge delta — without the clamp, physics would explode in a single giant step.
+
+## The Frameloop component
+
+The `Frameloop` component ties it together. It renders nothing — it exists purely to run our systems every frame. Note that it lives **outside** the `Canvas`, because it's game logic, not rendering:
+
+```tsx
+// frameloop.tsx
+export function Frameloop() {
+  const world = useWorld();
+
+  useAnimationFrame(() => {
+    updateTime(world);
+  });
+
+  return null;
+}
+```
+
+As the game grows, this is where every system gets called, in order, once per frame.
+
+## Putting a clock on the screen
+
+Finally, let's prove the loop is alive. koota's React bindings include `useTrait`, which subscribes a component to a trait — the component re-renders whenever the trait changes:
+
+```tsx
+function Clock() {
+  const world = useWorld();
+  const time = useTrait(world, Time);
+
+  if (!time) return null;
+
+  return (
+    <div style={{ position: 'absolute', top: 0, left: 0, color: 'white' }}>
+      <div>Current Time: {time.current.toFixed(2)} s</div>
+      <div>Delta Time: {(time.delta * 1000).toFixed(4)} ms</div>
+    </div>
+  );
+}
+```
+
+Add `<Frameloop />` and `<Clock />` next to the `Canvas` in `App` and you should see the time ticking up every frame. This pattern — systems mutate the world, React components reactively read it — is the backbone of everything we build from here.
+
+Next: our first entity, the player.

@@ -1,0 +1,351 @@
+---
+title: Player Capsule
+description: Spawn a player entity in the world and render it as a capsule.
+nav: 3
+---
+
+Time for our first entities! In this chapter the player joins the game — represented in the world as an **entity** with traits, and drawn on screen as a simple capsule. We also promote the ground to an entity, establishing the pattern we'll use for everything: **spawn entities with actions, query them in renderers, and draw them with R3F**.
+
+<Sandpack codeViewer
+  template="react-ts"
+  customSetup={{
+    dependencies: {
+      'react': '^19.2.0',
+      'react-dom': '^19.2.0',
+      'three': '~0.185.1',
+      '@react-three/fiber': 'latest',
+      '@react-three/drei': 'latest',
+      'koota': 'latest'
+    },
+  }}
+  files={{
+    '/styles.css': `body {
+  margin: 0;
+}
+`,
+    '/index.tsx': `import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { WorldProvider } from 'koota/react';
+import './styles.css';
+import App from './App';
+import { world } from './world';
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <WorldProvider world={world}>
+      <App />
+    </WorldProvider>
+  </StrictMode>
+);
+`,
+    '/world.ts': `import { createWorld } from 'koota';
+import { Time } from './traits';
+
+export const world = createWorld(Time);
+`,
+    '/traits.ts': `import { trait } from 'koota';
+import { Vector3 } from 'three';
+
+export const Time = trait({ delta: 0, current: 0 });
+
+export const Position = trait(() => new Vector3());
+
+export const Player = trait();
+export const Ground = trait();
+`,
+    '/actions.ts': `import { createActions } from 'koota';
+import { Vector3 } from 'three';
+import { Ground, Player, Position } from './traits';
+
+export const actions = createActions((world) => ({
+  spawnPlayer: ({ position = [0, 0, 0] } = {}) => {
+    return world.spawn(
+      Player,
+      Position(new Vector3(position[0], position[1], position[2]))
+    );
+  },
+  spawnGround: () => {
+    return world.spawn(Ground, Position);
+  },
+}));
+`,
+    '/utils/use-animation-frame.ts': `import { useEffect, useEffectEvent } from 'react';
+
+type Callback = (dt: number) => void;
+
+export function useAnimationFrame(callback: Callback) {
+  const onFrame = useEffectEvent((dt: number) => callback(dt));
+
+  useEffect(() => {
+    let lastTime = performance.now();
+    let requestId = 0;
+
+    const handleFrame = (time: number) => {
+      const dt = (time - lastTime) / 1000;
+      lastTime = time;
+      onFrame(dt);
+      requestId = requestAnimationFrame(handleFrame);
+    };
+
+    requestId = requestAnimationFrame(handleFrame);
+
+    return () => {
+      cancelAnimationFrame(requestId);
+    };
+  }, []);
+}
+`,
+    '/systems/update-time.ts': `import { World } from 'koota';
+import { Time } from '../traits';
+
+export function updateTime(world: World) {
+  const time = world.get(Time)!;
+
+  if (time.current === 0) time.current = performance.now();
+
+  const now = performance.now();
+  const delta = now - time.current;
+
+  time.delta = Math.min(delta / 1000, 1 / 30);
+  time.current = now;
+
+  world.set(Time, time);
+}
+`,
+    '/frameloop.tsx': `import { useWorld } from 'koota/react';
+import { updateTime } from './systems/update-time';
+import { useAnimationFrame } from './utils/use-animation-frame';
+
+export function Frameloop() {
+  const world = useWorld();
+
+  useAnimationFrame(() => {
+    updateTime(world);
+  });
+
+  return null;
+}
+`,
+    '/view/ground-renderer.tsx': `import { useTexture } from '@react-three/drei';
+import { Entity } from 'koota';
+import { useQueryFirst, useTrait } from 'koota/react';
+import { RepeatWrapping } from 'three';
+import { Ground, Position } from '../traits';
+
+const grassImg = 'https://raw.githubusercontent.com/krispya/minecraft-like/main/src/assets/grass.jpg';
+
+export function GroundRenderer() {
+  const ground = useQueryFirst(Ground, Position);
+  return ground ? <GroundView key={ground.id()} entity={ground} /> : null;
+}
+
+function GroundView({ entity }: { entity: Entity }) {
+  const texture = useTexture(grassImg);
+  texture.wrapS = texture.wrapT = RepeatWrapping;
+  const position = useTrait(entity, Position);
+
+  return (
+    <mesh receiveShadow position={position?.toArray()} rotation-x={-Math.PI / 2}>
+      <planeGeometry args={[1000, 1000]} />
+      <meshStandardMaterial map={texture} map-repeat={[240, 240]} color="green" />
+    </mesh>
+  );
+}
+`,
+    '/view/player-renderer.tsx': `import { Capsule } from '@react-three/drei';
+import { Entity } from 'koota';
+import { useQuery, useTrait } from 'koota/react';
+import { Player, Position } from '../traits';
+
+export function PlayerRenderer() {
+  const players = useQuery(Player, Position);
+  return players.map((p) => <PlayerView key={p.id()} entity={p} />);
+}
+
+function PlayerView({ entity }: { entity: Entity }) {
+  const position = useTrait(entity, Position);
+
+  return <Capsule args={[0.5, 1.8]} position={position?.toArray()} />;
+}
+`,
+    '/App.tsx': `import { Sky } from '@react-three/drei';
+import { Canvas } from '@react-three/fiber';
+import { useActions, useTrait, useWorld } from 'koota/react';
+import { useEffect } from 'react';
+import { actions } from './actions';
+import { Frameloop } from './frameloop';
+import { Time } from './traits';
+import { GroundRenderer } from './view/ground-renderer';
+import { PlayerRenderer } from './view/player-renderer';
+
+export default function App() {
+  return (
+    <>
+      <Canvas
+        shadows
+        camera={{ fov: 45, position: [10, 10, 10] }}
+        style={{ position: 'absolute', inset: 0 }}
+      >
+        <Sky sunPosition={[100, 20, 100]} />
+        <ambientLight intensity={0.3 * Math.PI} />
+        <pointLight castShadow intensity={0.8 * Math.PI} decay={0} position={[100, 100, 100]} />
+
+        <PlayerRenderer />
+        <GroundRenderer />
+      </Canvas>
+
+      <Frameloop />
+      <Startup />
+
+      <Clock />
+    </>
+  );
+}
+
+function Startup() {
+  const { spawnPlayer, spawnGround } = useActions(actions);
+
+  useEffect(() => {
+    const player = spawnPlayer({ position: [0, 1.4, 0] });
+    const ground = spawnGround();
+
+    return () => {
+      player.destroy();
+      ground.destroy();
+    };
+  }, [spawnPlayer, spawnGround]);
+
+  return null;
+}
+
+function Clock() {
+  const world = useWorld();
+  const time = useTrait(world, Time);
+
+  if (!time) return null;
+
+  return (
+    <div style={{ position: 'absolute', top: 0, left: 0, color: 'white' }}>
+      <div>Current Time: {time.current.toFixed(2)} s</div>
+      <div>Delta Time: {(time.delta * 1000).toFixed(4)} ms</div>
+    </div>
+  );
+}
+`}}/>
+
+## Entities and traits
+
+In koota, an **entity** is just an ID that traits are attached to. The traits *are* the data. Our player needs two things: a tag marking it as the player, and a position in the world. We also add a `Ground` tag so the ground can become an entity too:
+
+```tsx
+// traits.ts
+import { trait } from 'koota';
+import { Vector3 } from 'three';
+
+export const Time = trait({ delta: 0, current: 0 });
+
+export const Position = trait(() => new Vector3());
+
+export const Player = trait();
+export const Ground = trait();
+```
+
+- `Position` is a **schema-less trait** wrapping a three.js `Vector3` — the callback creates a fresh vector per entity.
+- `Player` and `Ground` are **tag traits**: they hold no data and exist purely so queries can find these entities.
+
+## Actions: spawning entities
+
+Rather than calling `world.spawn` all over the codebase, we centralize entity creation in **actions** — named functions bound to the world:
+
+```tsx
+// actions.ts
+import { createActions } from 'koota';
+import { Vector3 } from 'three';
+import { Ground, Player, Position } from './traits';
+
+export const actions = createActions((world) => ({
+  spawnPlayer: ({ position = [0, 0, 0] } = {}) => {
+    return world.spawn(
+      Player,
+      Position(new Vector3(position[0], position[1], position[2]))
+    );
+  },
+  spawnGround: () => {
+    return world.spawn(Ground, Position);
+  },
+}));
+```
+
+Passing a trait to `world.spawn` with arguments — like `Position(new Vector3(...))` — initializes it with those values; passing the bare trait uses its defaults.
+
+## Renderers: querying and drawing
+
+Here is the core pattern of the whole game. A **renderer** queries the world for entities with certain traits and draws each one with R3F. The renderer owns no game state — it's a pure view of the world.
+
+The player renderer uses `useQuery`, which reactively returns all entities matching the given traits, and draws each one as a drei `Capsule`:
+
+```tsx
+// view/player-renderer.tsx
+import { Capsule } from '@react-three/drei';
+import { Entity } from 'koota';
+import { useQuery, useTrait } from 'koota/react';
+import { Player, Position } from '../traits';
+
+export function PlayerRenderer() {
+  const players = useQuery(Player, Position);
+  return players.map((p) => <PlayerView key={p.id()} entity={p} />);
+}
+
+function PlayerView({ entity }: { entity: Entity }) {
+  const position = useTrait(entity, Position);
+
+  return <Capsule args={[0.5, 1.8]} position={position?.toArray()} />;
+}
+```
+
+That's the whole player for now — a capsule with a radius of `0.5` and a length of `1.8`, roughly human proportions. `useTrait(entity, Position)` subscribes the view to that entity's position, so when a system moves the player later, the capsule follows automatically.
+
+The ground gets the same treatment. Since there is only ever one ground, we use `useQueryFirst`:
+
+```tsx
+// view/ground-renderer.tsx
+export function GroundRenderer() {
+  const ground = useQueryFirst(Ground, Position);
+  return ground ? <GroundView key={ground.id()} entity={ground} /> : null;
+}
+```
+
+The `GroundView` is the same plane mesh from chapter 1, now positioned from the entity's `Position` trait.
+
+## Startup: spawning the world
+
+Finally we need something to actually create these entities. The `Startup` component runs once on mount, spawning the player at the center of the world `(0, 0)` and the ground beneath it:
+
+```tsx
+function Startup() {
+  const { spawnPlayer, spawnGround } = useActions(actions);
+
+  useEffect(() => {
+    const player = spawnPlayer({ position: [0, 1.4, 0] });
+    const ground = spawnGround();
+
+    return () => {
+      player.destroy();
+      ground.destroy();
+    };
+  }, [spawnPlayer, spawnGround]);
+
+  return null;
+}
+```
+
+A few things to note:
+
+- `useActions` binds our actions to the world from context.
+- The player spawns at `y = 1.4` — half the capsule's total height (`1.8` length + `0.5` radius at each end ≈ `2.8` tall) — so it stands *on* the ground instead of being half-buried in it.
+- The effect **cleanup destroys the entities**. This makes the component StrictMode-safe (React mounts effects twice in development) and means unmounting `Startup` cleanly removes everything it spawned.
+
+Update `App` to render `<PlayerRenderer />` and `<GroundRenderer />` inside the `Canvas`, and `<Startup />` outside next to `<Frameloop />`. The camera is still the fixed default `Canvas` camera looking at the origin — you should see your capsule standing at the center of the world.
+
+Next we make the camera a proper citizen of the world too.
+

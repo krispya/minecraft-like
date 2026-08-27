@@ -1,0 +1,135 @@
+:root {
+  color-scheme: dark;
+  --bg: #101418;
+  --bg-panel: #161b22;
+  --border: #2a313a;
+  --text: #e6e8eb;
+  --text-dim: #9aa4b2;
+  --accent: #4cc38a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  line-height: 1.65;
+}
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
+  width: 260px;
+  flex-shrink: 0;
+  padding: 24px 16px;
+  border-right: 1px solid var(--border);
+  background: var(--bg-panel);
+  overflow-y: auto;
+}
+
+.sidebar-title {
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar nav a {
+  color: var(--text-dim);
+  text-decoration: none;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.sidebar nav a:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+
+.sidebar nav a.active {
+  background: rgba(76, 195, 138, 0.12);
+  color: var(--accent);
+}
+
+.nav-number {
+  display: inline-block;
+  width: 18px;
+  color: var(--text-dim);
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  max-width: 960px;
+  padding: 40px 48px 96px;
+}
+
+.content h1 {
+  margin-top: 0;
+}
+
+.description {
+  color: var(--text-dim);
+  margin-top: -8px;
+}
+
+.content a {
+  color: var(--accent);
+}
+
+.content code {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 0.9em;
+}
+
+.content pre {
+  background: #0d1117;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+}
+
+.content pre code {
+  background: none;
+  padding: 0;
+  font-size: 13px;
+}
+
+.content blockquote {
+  margin: 16px 0;
+  padding: 8px 16px;
+  border-left: 3px solid var(--accent);
+  background: rgba(76, 195, 138, 0.06);
+  color: var(--text-dim);
+}
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}

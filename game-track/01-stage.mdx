@@ -1,0 +1,126 @@
+---
+title: Stage
+description: Render the ground and sky for our Minecraft-like world.
+nav: 1
+---
+
+Every game needs a stage. In this first step we set up a React Three Fiber `Canvas`, render an "infinite" grass ground plane, and add a sky with lights so our world has somewhere to exist.
+
+<Sandpack codeViewer
+  template="react-ts"
+  customSetup={{
+    dependencies: {
+      'three': '~0.185.1',
+      '@react-three/fiber': 'latest',
+      '@react-three/drei': 'latest'
+    },
+  }}
+  files={{
+    '/styles.css': `body {
+  margin: 0;
+}
+`,
+    '/App.tsx': `import { Sky, useTexture } from '@react-three/drei';
+import { Canvas } from '@react-three/fiber';
+import { RepeatWrapping } from 'three';
+
+const grassImg = 'https://raw.githubusercontent.com/krispya/minecraft-like/main/src/assets/grass.jpg';
+
+export default function App() {
+  return (
+    <Canvas
+      shadows
+      camera={{ fov: 45, position: [10, 10, 10] }}
+      style={{ position: 'absolute', inset: 0 }}
+    >
+      <Sky sunPosition={[100, 20, 100]} />
+      <ambientLight intensity={0.3 * Math.PI} />
+      <pointLight castShadow intensity={0.8 * Math.PI} decay={0} position={[100, 100, 100]} />
+
+      <Ground />
+    </Canvas>
+  );
+}
+
+function Ground() {
+  const texture = useTexture(grassImg);
+  texture.wrapS = texture.wrapT = RepeatWrapping;
+
+  return (
+    <mesh receiveShadow rotation-x={-Math.PI / 2}>
+      <planeGeometry args={[1000, 1000]} />
+      <meshStandardMaterial map={texture} map-repeat={[240, 240]} color="green" />
+    </mesh>
+  );
+}
+`}}/>
+
+## The Canvas
+
+Everything three.js lives inside the `Canvas` component from `@react-three/fiber`. It creates the WebGL renderer, the scene, and a default camera for us.
+
+```tsx
+<Canvas
+  shadows
+  camera={{ fov: 45, position: [10, 10, 10] }}
+  style={{ position: 'absolute', inset: 0 }}
+>
+```
+
+- `shadows` enables shadow maps on the renderer so lights can cast shadows.
+- `camera={{ fov: 45, position: [10, 10, 10] }}` configures the default camera: a 45° field of view, pulled up and back so we look down at the center of the world. This camera is temporary — in a later chapter the camera becomes an entity in our game world and we control it ourselves.
+- The `style` makes the canvas fill the whole screen.
+
+## Rendering the ground
+
+The ground is a single huge plane. `planeGeometry` is created standing upright (facing the camera), so we rotate it -90° around the X axis to lay it flat like a floor.
+
+```tsx
+import { useTexture } from '@react-three/drei';
+import { RepeatWrapping } from 'three';
+
+import grassImg from './assets/grass.jpg';
+
+function Ground() {
+  const texture = useTexture(grassImg);
+  texture.wrapS = texture.wrapT = RepeatWrapping;
+
+  return (
+    <mesh receiveShadow rotation-x={-Math.PI / 2}>
+      <planeGeometry args={[1000, 1000]} />
+      <meshStandardMaterial map={texture} map-repeat={[240, 240]} color="green" />
+    </mesh>
+  );
+}
+```
+
+- `args={[1000, 1000]}` makes the plane 1000×1000 units — far bigger than the player will ever see, so it reads as infinite.
+- `receiveShadow` lets other objects (like our future player) cast shadows onto it.
+- `meshStandardMaterial` is a physically-based material that reacts to our lights.
+
+To make it look like grass instead of a flat color, we load a grass texture with drei's `useTexture` hook. A single 1000×1000 plane stretched over one small image would look like a green blur, so we tile it: setting `wrapS`/`wrapT` to `RepeatWrapping` allows the texture to repeat, and `map-repeat={[240, 240]}` tiles it 240 times in each direction. The `color="green"` tints the texture so it reads a little more saturated. `useTexture` suspends while loading — R3F's `Canvas` handles that for us.
+
+> [!NOTE]
+> In a local project you would import `grass.jpg` from your assets folder and Vite bundles it. In the embedded sandbox above we load the same texture from a URL instead, since the sandbox can't access local files — either works, `useTexture` just takes a URL string.
+
+## Sky and lights
+
+A green plane floating in a black void isn't much of a world. Drei ships a ready-made `Sky` component that renders a physically-based sky dome:
+
+```tsx
+<Sky sunPosition={[100, 20, 100]} />
+```
+
+The `sunPosition` places the sun low-ish on the horizon, giving the sky a warm gradient.
+
+The sky is just a backdrop — it doesn't light anything. For that we add two lights:
+
+```tsx
+<ambientLight intensity={0.3 * Math.PI} />
+<pointLight castShadow intensity={0.8 * Math.PI} decay={0} position={[100, 100, 100]} />
+```
+
+- The `ambientLight` provides a soft base level of light everywhere so shadows aren't pitch black.
+- The `pointLight` acts as our "sun": positioned far away in roughly the same direction as the `Sky`'s sun, with `castShadow` so objects will throw shadows, and `decay={0}` so its brightness doesn't fall off over the large distance.
+
+That's our stage! Next up we build the heartbeat of the game: the frameloop.

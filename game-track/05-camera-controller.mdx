@@ -1,0 +1,679 @@
+---
+title: Camera Controller
+description: Capture pointer and wheel input and drive an orbit camera with systems.
+nav: 5
+---
+
+The camera is an entity — now let's make it move. In this chapter we capture **pointer and wheel input** into world traits, then build an **orbit controller**: drag to rotate around the player, scroll to zoom, with smooth velocity damping. This is our first real taste of systems working together in the frameloop.
+
+<Sandpack codeViewer
+  template="react-ts"
+  customSetup={{
+    dependencies: {
+      'react': '^19.2.0',
+      'react-dom': '^19.2.0',
+      'three': '~0.185.1',
+      '@react-three/fiber': 'latest',
+      '@react-three/drei': 'latest',
+      'koota': 'latest'
+    },
+  }}
+  files={{
+    '/styles.css': `body {
+  margin: 0;
+}
+`,
+    '/index.tsx': `import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { WorldProvider } from 'koota/react';
+import './styles.css';
+import App from './App';
+import { world } from './world';
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <WorldProvider world={world}>
+      <App />
+    </WorldProvider>
+  </StrictMode>
+);
+`,
+    '/world.ts': `import { createWorld } from 'koota';
+import { Pointer, Time, Wheel } from './traits';
+
+export const world = createWorld(Time, Pointer, Wheel);
+`,
+    '/traits.ts': `import { trait } from 'koota';
+import { Quaternion, Spherical, Vector2, Vector3 } from 'three';
+
+export const Time = trait({ delta: 0, current: 0 });
+
+export const Pointer = trait({
+  // Normalized device coordinates.
+  position: () => new Vector2(),
+  // Accumulated since the last frame.
+  delta: () => new Vector2(),
+  isDown: false,
+});
+// Positive when scrolling down.
+export const Wheel = trait({ delta: 0 });
+
+export const Position = trait(() => new Vector3());
+export const Rotation = trait(() => new Quaternion());
+
+export const Player = trait();
+export const Ground = trait();
+
+export const Camera = trait();
+
+export const OrbitController = trait({
+  // Offset from the target.
+  spherical: () => new Spherical(10, Math.PI / 3, 0),
+  target: () => new Vector3(),
+  // Angular and log-radius velocity.
+  velocity: () => new Spherical(0, 0, 0),
+  rotateSpeed: 1,
+  zoomSpeed: 1,
+  // E-folds per second.
+  damping: 8,
+  minDistance: 2,
+  maxDistance: 20,
+});
+`,
+    '/actions.ts': `import { createActions } from 'koota';
+import { Quaternion, Spherical, Vector3 } from 'three';
+import { Camera, Ground, OrbitController, Player, Position, Rotation } from './traits';
+
+export const actions = createActions((world) => ({
+  spawnPlayer: ({ position = [0, 0, 0] } = {}) => {
+    return world.spawn(
+      Player,
+      Position(new Vector3(position[0], position[1], position[2]))
+    );
+  },
+  spawnGround: () => {
+    return world.spawn(Ground, Position);
+  },
+  spawnCamera: ({
+    position = [0, 0, 0],
+    rotation = [0, 0, 0, 1],
+    orbit: { spherical = [30, Math.PI / 3, Math.PI / 4], target = [0, 2, 0], damping = 8 } = {},
+  } = {}) => {
+    return world.spawn(
+      Camera,
+      Position(new Vector3(position[0], position[1], position[2])),
+      Rotation(new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3])),
+      OrbitController({
+        spherical: new Spherical(spherical[0], spherical[1], spherical[2]),
+        target: new Vector3(target[0], target[1], target[2]),
+        damping,
+      })
+    );
+  },
+}));
+`,
+    '/utils/use-animation-frame.ts': `import { useEffect, useEffectEvent } from 'react';
+
+type Callback = (dt: number) => void;
+
+export function useAnimationFrame(callback: Callback) {
+  const onFrame = useEffectEvent((dt: number) => callback(dt));
+
+  useEffect(() => {
+    let lastTime = performance.now();
+    let requestId = 0;
+
+    const handleFrame = (time: number) => {
+      const dt = (time - lastTime) / 1000;
+      lastTime = time;
+      onFrame(dt);
+      requestId = requestAnimationFrame(handleFrame);
+    };
+
+    requestId = requestAnimationFrame(handleFrame);
+
+    return () => {
+      cancelAnimationFrame(requestId);
+    };
+  }, []);
+}
+`,
+    '/systems/update-time.ts': `import { World } from 'koota';
+import { Time } from '../traits';
+
+export function updateTime(world: World) {
+  const time = world.get(Time)!;
+
+  if (time.current === 0) time.current = performance.now();
+
+  const now = performance.now();
+  const delta = now - time.current;
+
+  time.delta = Math.min(delta / 1000, 1 / 30);
+  time.current = now;
+
+  world.set(Time, time);
+}
+`,
+    '/systems/orbit-controller.ts': `import type { World } from 'koota';
+import { MathUtils, Matrix4, Vector3 } from 'three';
+import { OrbitController, Pointer, Position, Rotation, Time, Wheel } from '../traits';
+
+const NDC_TO_RADIANS = Math.PI;
+const ZOOM_STEP = 1.1;
+const UP = new Vector3(0, 1, 0);
+const matrix = new Matrix4();
+
+export function updateOrbitController(world: World) {
+  const pointer = world.get(Pointer)!;
+  const wheel = world.get(Wheel)!;
+
+  world.query(OrbitController).updateEach(([controller]) => {
+    const { velocity, rotateSpeed, zoomSpeed, damping } = controller;
+
+    // Damping-scaled impulses preserve travel while changing coast time.
+    if (pointer.isDown) {
+      velocity.theta -= pointer.delta.x * NDC_TO_RADIANS * rotateSpeed * damping;
+      velocity.phi += pointer.delta.y * NDC_TO_RADIANS * rotateSpeed * damping;
+    }
+
+    // Log-space zoom scales evenly at every distance.
+    velocity.radius += Math.log(ZOOM_STEP) * wheel.delta * zoomSpeed * damping;
+  });
+}
+
+export function moveOrbit(world: World) {
+  const { delta } = world.get(Time)!;
+
+  world.query(OrbitController).updateEach(([controller]) => {
+    const { spherical, velocity, damping, minDistance, maxDistance } = controller;
+
+    spherical.theta += velocity.theta * delta;
+    spherical.phi += velocity.phi * delta;
+    // Integrate radius in log space.
+    spherical.radius *= Math.exp(velocity.radius * delta);
+
+    // Stop velocity at distance limits.
+    const radius = MathUtils.clamp(spherical.radius, minDistance, maxDistance);
+    if (radius !== spherical.radius) velocity.radius = 0;
+    spherical.radius = radius;
+
+    const phi = spherical.phi;
+    // Avoid singularities at the poles.
+    spherical.makeSafe();
+    if (spherical.phi !== phi) velocity.phi = 0;
+
+    velocity.theta = MathUtils.damp(velocity.theta, 0, damping, delta);
+    velocity.phi = MathUtils.damp(velocity.phi, 0, damping, delta);
+    velocity.radius = MathUtils.damp(velocity.radius, 0, damping, delta);
+  });
+}
+
+export function applyOrbit(world: World) {
+  world.query(OrbitController, Position, Rotation).updateEach(([controller, position, rotation]) => {
+    const { spherical, target } = controller;
+
+    position.setFromSpherical(spherical).add(target);
+    matrix.lookAt(position, target, UP);
+    rotation.setFromRotationMatrix(matrix);
+  });
+}
+`,
+    '/systems/reset-input.ts': `import type { World } from 'koota';
+import { Pointer, Wheel } from '../traits';
+
+// Clear deltas after all consumers run.
+export function resetInputDelta(world: World) {
+  const pointer = world.get(Pointer)!;
+  pointer.delta.set(0, 0);
+  world.set(Pointer, pointer);
+
+  const wheel = world.get(Wheel)!;
+  wheel.delta = 0;
+  world.set(Wheel, wheel);
+}
+`,
+    '/view/camera-renderer.tsx': `import { PerspectiveCamera } from '@react-three/drei';
+import { Entity } from 'koota';
+import { useQuery, useTrait } from 'koota/react';
+import { Camera, Position, Rotation } from '../traits';
+
+export function CameraRenderer() {
+  const cameras = useQuery(Camera, Position, Rotation);
+  return cameras.map((entity) => <CameraView key={entity.id()} entity={entity} />);
+}
+
+function CameraView({ entity }: { entity: Entity }) {
+  const position = useTrait(entity, Position);
+  const rotation = useTrait(entity, Rotation);
+
+  return (
+    <PerspectiveCamera makeDefault position={position?.toArray()} quaternion={rotation?.toArray()} />
+  );
+}
+`,
+    '/view/ground-renderer.tsx': `import { useTexture } from '@react-three/drei';
+import { Entity } from 'koota';
+import { useQueryFirst, useTrait } from 'koota/react';
+import { RepeatWrapping } from 'three';
+import { Ground, Position } from '../traits';
+
+const grassImg = 'https://raw.githubusercontent.com/krispya/minecraft-like/main/src/assets/grass.jpg';
+
+export function GroundRenderer() {
+  const ground = useQueryFirst(Ground, Position);
+  return ground ? <GroundView key={ground.id()} entity={ground} /> : null;
+}
+
+function GroundView({ entity }: { entity: Entity }) {
+  const texture = useTexture(grassImg);
+  texture.wrapS = texture.wrapT = RepeatWrapping;
+  const position = useTrait(entity, Position);
+
+  return (
+    <mesh receiveShadow position={position?.toArray()} rotation-x={-Math.PI / 2}>
+      <planeGeometry args={[1000, 1000]} />
+      <meshStandardMaterial map={texture} map-repeat={[240, 240]} color="green" />
+    </mesh>
+  );
+}
+`,
+    '/view/player-renderer.tsx': `import { Capsule } from '@react-three/drei';
+import { Entity } from 'koota';
+import { useQuery, useTrait } from 'koota/react';
+import { Player, Position } from '../traits';
+
+export function PlayerRenderer() {
+  const players = useQuery(Player, Position);
+  return players.map((p) => <PlayerView key={p.id()} entity={p} />);
+}
+
+function PlayerView({ entity }: { entity: Entity }) {
+  const position = useTrait(entity, Position);
+
+  return <Capsule args={[0.5, 1.8]} position={position?.toArray()} />;
+}
+`,
+    '/frameloop.tsx': `import type { World } from 'koota';
+import { useEffect } from 'react';
+import { useWorld } from 'koota/react';
+import { applyOrbit, moveOrbit, updateOrbitController } from './systems/orbit-controller';
+import { resetInputDelta } from './systems/reset-input';
+import { updateTime } from './systems/update-time';
+import { Pointer, Wheel } from './traits';
+import { useAnimationFrame } from './utils/use-animation-frame';
+
+export function Frameloop() {
+  const world = useWorld();
+  usePointer(world);
+  useWheel(world);
+
+  useAnimationFrame(() => {
+    updateTime(world);
+
+    updateOrbitController(world);
+    moveOrbit(world);
+    applyOrbit(world);
+
+    resetInputDelta(world);
+  });
+
+  return null;
+}
+
+function usePointer(world: World) {
+  useEffect(() => {
+    const toNdcX = (event: PointerEvent) => (event.clientX / window.innerWidth) * 2 - 1;
+    const toNdcY = (event: PointerEvent) => -(event.clientY / window.innerHeight) * 2 + 1;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const pointer = world.get(Pointer)!;
+      // Prevent a jump on the first move.
+      pointer.position.set(toNdcX(event), toNdcY(event));
+      pointer.isDown = true;
+
+      world.set(Pointer, pointer);
+    };
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const pointer = world.get(Pointer)!;
+      const x = toNdcX(event);
+      const y = toNdcY(event);
+
+      // Preserve moves between frames.
+      pointer.delta.x += x - pointer.position.x;
+      pointer.delta.y += y - pointer.position.y;
+      pointer.position.set(x, y);
+
+      world.set(Pointer, pointer);
+    };
+
+    const handlePointerUp = (event: PointerEvent) => {
+      const pointer = world.get(Pointer)!;
+      // buttons excludes the released button.
+      pointer.isDown = event.buttons !== 0;
+
+      world.set(Pointer, pointer);
+    };
+
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
+
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerUp);
+    };
+  }, [world]);
+}
+
+// Normalize pixel, line, and page deltas to wheel notches.
+const WHEEL_SCALE = [1 / 100, 1 / 3, 1];
+
+function useWheel(world: World) {
+  useEffect(() => {
+    const handleWheel = (event: WheelEvent) => {
+      // Keep wheel input in the scene.
+      event.preventDefault();
+
+      const wheel = world.get(Wheel)!;
+      wheel.delta += event.deltaY * (WHEEL_SCALE[event.deltaMode] ?? WHEEL_SCALE[0]);
+
+      world.set(Wheel, wheel);
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+    };
+  }, [world]);
+}
+`,
+    '/App.tsx': `import { Sky } from '@react-three/drei';
+import { Canvas } from '@react-three/fiber';
+import { useActions, useTrait, useWorld } from 'koota/react';
+import { useEffect } from 'react';
+import { actions } from './actions';
+import { Frameloop } from './frameloop';
+import { Time } from './traits';
+import { CameraRenderer } from './view/camera-renderer';
+import { GroundRenderer } from './view/ground-renderer';
+import { PlayerRenderer } from './view/player-renderer';
+
+export default function App() {
+  return (
+    <>
+      <Canvas shadows camera={{ fov: 45 }} style={{ position: 'absolute', inset: 0 }}>
+        <Sky sunPosition={[100, 20, 100]} />
+        <ambientLight intensity={0.3 * Math.PI} />
+        <pointLight castShadow intensity={0.8 * Math.PI} decay={0} position={[100, 100, 100]} />
+
+        <PlayerRenderer />
+        <GroundRenderer />
+        <CameraRenderer />
+      </Canvas>
+
+      <Frameloop />
+      <Startup />
+
+      <Clock />
+    </>
+  );
+}
+
+function Startup() {
+  const { spawnPlayer, spawnGround, spawnCamera } = useActions(actions);
+
+  useEffect(() => {
+    const player = spawnPlayer({ position: [0, 1.4, 0] });
+    const ground = spawnGround();
+    const camera = spawnCamera({ orbit: { damping: 8 } });
+
+    return () => {
+      player.destroy();
+      ground.destroy();
+      camera.destroy();
+    };
+  }, [spawnPlayer, spawnGround, spawnCamera]);
+
+  return null;
+}
+
+function Clock() {
+  const world = useWorld();
+  const time = useTrait(world, Time);
+
+  if (!time) return null;
+
+  return (
+    <div style={{ position: 'absolute', top: 0, left: 0, color: 'white' }}>
+      <div>Current Time: {time.current.toFixed(2)} s</div>
+      <div>Delta Time: {(time.delta * 1000).toFixed(4)} ms</div>
+    </div>
+  );
+}
+`}}/>
+
+## Input as world state
+
+Instead of handling input events wherever we happen to need them, we capture input into **world traits** that any system can read. Two new traits, registered on the world itself:
+
+```tsx
+// traits.ts
+export const Pointer = trait({
+  // Normalized device coordinates.
+  position: () => new Vector2(),
+  // Accumulated since the last frame.
+  delta: () => new Vector2(),
+  isDown: false,
+});
+// Positive when scrolling down.
+export const Wheel = trait({ delta: 0 });
+```
+
+```tsx
+// world.ts
+export const world = createWorld(Time, Pointer, Wheel);
+```
+
+The `Frameloop` component subscribes to browser events with two hooks. `usePointer` converts pointer positions to **normalized device coordinates** (NDC, -1 to 1 on both axes) so the input is resolution-independent, and *accumulates* movement into `delta` — events can fire many times between frames, so we sum them instead of overwriting:
+
+```tsx
+const handlePointerMove = (event: PointerEvent) => {
+  const pointer = world.get(Pointer)!;
+  const x = toNdcX(event);
+  const y = toNdcY(event);
+
+  // Preserve moves between frames.
+  pointer.delta.x += x - pointer.position.x;
+  pointer.delta.y += y - pointer.position.y;
+  pointer.position.set(x, y);
+
+  world.set(Pointer, pointer);
+};
+```
+
+`useWheel` normalizes the wheel event's three possible `deltaMode` units (pixels, lines, pages) into consistent "notches" and accumulates them the same way:
+
+```tsx
+// Normalize pixel, line, and page deltas to wheel notches.
+const WHEEL_SCALE = [1 / 100, 1 / 3, 1];
+
+const handleWheel = (event: WheelEvent) => {
+  // Keep wheel input in the scene.
+  event.preventDefault();
+
+  const wheel = world.get(Wheel)!;
+  wheel.delta += event.deltaY * (WHEEL_SCALE[event.deltaMode] ?? WHEEL_SCALE[0]);
+
+  world.set(Wheel, wheel);
+};
+```
+
+Because deltas accumulate, something has to clear them after every system has consumed them. That's the job of `resetInputDelta`, which always runs **last** in the frameloop:
+
+```tsx
+// systems/reset-input.ts
+export function resetInputDelta(world: World) {
+  const pointer = world.get(Pointer)!;
+  pointer.delta.set(0, 0);
+  world.set(Pointer, pointer);
+
+  const wheel = world.get(Wheel)!;
+  wheel.delta = 0;
+  world.set(Wheel, wheel);
+}
+```
+
+## The OrbitController trait
+
+An orbit camera lives on a sphere around a target point. Three.js's `Spherical` describes exactly that: a `radius` (distance), `phi` (polar angle from the top), and `theta` (azimuthal angle around the target).
+
+```tsx
+// traits.ts
+export const OrbitController = trait({
+  // Offset from the target.
+  spherical: () => new Spherical(10, Math.PI / 3, 0),
+  target: () => new Vector3(),
+  // Angular and log-radius velocity.
+  velocity: () => new Spherical(0, 0, 0),
+  rotateSpeed: 1,
+  zoomSpeed: 1,
+  // E-folds per second.
+  damping: 8,
+  minDistance: 2,
+  maxDistance: 20,
+});
+```
+
+Note that the controller stores a **velocity**, not just a position on the sphere. Input applies impulses to the velocity, the velocity moves the camera, and damping bleeds the velocity off over time — that's what gives the camera its smooth, coasting feel.
+
+
+## Three systems, one controller
+
+We split the orbit logic into three small systems — input, motion, and application — each with a single responsibility.
+
+**1. `updateOrbitController`** turns input into velocity impulses. Dragging while the pointer is down spins the camera; the wheel zooms:
+
+```tsx
+export function updateOrbitController(world: World) {
+  const pointer = world.get(Pointer)!;
+  const wheel = world.get(Wheel)!;
+
+  world.query(OrbitController).updateEach(([controller]) => {
+    const { velocity, rotateSpeed, zoomSpeed, damping } = controller;
+
+    // Damping-scaled impulses preserve travel while changing coast time.
+    if (pointer.isDown) {
+      velocity.theta -= pointer.delta.x * NDC_TO_RADIANS * rotateSpeed * damping;
+      velocity.phi += pointer.delta.y * NDC_TO_RADIANS * rotateSpeed * damping;
+    }
+
+    // Log-space zoom scales evenly at every distance.
+    velocity.radius += Math.log(ZOOM_STEP) * wheel.delta * zoomSpeed * damping;
+  });
+}
+```
+
+This is also our first look at `world.query(...).updateEach(...)` — the system-side equivalent of `useQuery`: iterate every entity with the given traits and mutate them. Two subtleties: impulses are scaled by `damping` so the *total* distance traveled stays the same regardless of how quickly the motion decays, and zoom velocity lives in **log space** so one wheel notch scales the distance by the same factor whether you're close up or far away.
+
+**2. `moveOrbit`** integrates the velocity over `Time.delta` and enforces limits:
+
+```tsx
+export function moveOrbit(world: World) {
+  const { delta } = world.get(Time)!;
+
+  world.query(OrbitController).updateEach(([controller]) => {
+    const { spherical, velocity, damping, minDistance, maxDistance } = controller;
+
+    spherical.theta += velocity.theta * delta;
+    spherical.phi += velocity.phi * delta;
+    // Integrate radius in log space.
+    spherical.radius *= Math.exp(velocity.radius * delta);
+
+    // Stop velocity at distance limits.
+    const radius = MathUtils.clamp(spherical.radius, minDistance, maxDistance);
+    if (radius !== spherical.radius) velocity.radius = 0;
+    spherical.radius = radius;
+
+    const phi = spherical.phi;
+    // Avoid singularities at the poles.
+    spherical.makeSafe();
+    if (spherical.phi !== phi) velocity.phi = 0;
+
+    velocity.theta = MathUtils.damp(velocity.theta, 0, damping, delta);
+    velocity.phi = MathUtils.damp(velocity.phi, 0, damping, delta);
+    velocity.radius = MathUtils.damp(velocity.radius, 0, damping, delta);
+  });
+}
+```
+
+The radius is clamped between `minDistance` and `maxDistance`, `makeSafe()` keeps `phi` away from the poles (where the orbit math degenerates), and `MathUtils.damp` exponentially decays each velocity toward zero — frame-rate independent smoothing.
+
+**3. `applyOrbit`** converts the spherical coordinates back into the camera's actual `Position` and `Rotation`:
+
+```tsx
+export function applyOrbit(world: World) {
+  world.query(OrbitController, Position, Rotation).updateEach(([controller, position, rotation]) => {
+    const { spherical, target } = controller;
+
+    position.setFromSpherical(spherical).add(target);
+    matrix.lookAt(position, target, UP);
+    rotation.setFromRotationMatrix(matrix);
+  });
+}
+```
+
+Once `Position` and `Rotation` are written, we're done — the `CameraRenderer` from the last chapter picks the changes up via `useTrait` and moves the actual three.js camera. The controller never touches rendering.
+
+## Wiring the frameloop
+
+Order matters. Time first, then input consumers, then motion, then application, and input reset dead last:
+
+```tsx
+export function Frameloop() {
+  const world = useWorld();
+  usePointer(world);
+  useWheel(world);
+
+  useAnimationFrame(() => {
+    updateTime(world);
+
+    updateOrbitController(world);
+    moveOrbit(world);
+    applyOrbit(world);
+
+    resetInputDelta(world);
+  });
+
+  return null;
+}
+```
+
+Finally, `spawnCamera` no longer computes a fixed look-at — it just attaches an `OrbitController` and lets the systems do the work every frame:
+
+```tsx
+spawnCamera: ({
+  position = [0, 0, 0],
+  rotation = [0, 0, 0, 1],
+  orbit: { spherical = [30, Math.PI / 3, Math.PI / 4], target = [0, 2, 0], damping = 8 } = {},
+} = {}) => {
+  return world.spawn(
+    Camera,
+    Position(new Vector3(position[0], position[1], position[2])),
+    Rotation(new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3])),
+    OrbitController({
+      spherical: new Spherical(spherical[0], spherical[1], spherical[2]),
+      target: new Vector3(target[0], target[1], target[2]),
+      damping,
+    })
+  );
+},
+```
+
+Drag anywhere to orbit around the player, scroll to zoom in and out, and notice how the camera glides to a stop instead of snapping. Everything you've built — input traits, a controller trait, systems in a frameloop, renderers that just draw — is the exact pattern the rest of the game (player movement, gravity, collision) is built on.
+
