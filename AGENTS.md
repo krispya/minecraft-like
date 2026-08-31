@@ -1,4 +1,5 @@
 <!-- managed:start -->
+
 ## Workspace Tools
 
 - **Package Manager:** pnpm
@@ -23,4 +24,18 @@ pnpm lint -- src/App.tsx src/core/systems/move-entity.ts
 pnpm format
 pnpm lint
 ```
+
 <!-- managed:end -->
+
+## Architecture
+
+This project uses data-oriented design with Koota as the core engine. React is a view domain that projects from the core data domain. The entire game should be able to be simulated headless. It is important to stick to strict domain boundaries. Read the Koota source for example.
+
+## Testing Principles
+
+- Cover the common paths that represent the 80% of real usage. Add edge-case tests only when the edge case is important or guards against a meaningful regression.
+- Test observable features and user stories, not implementation details. Test internals only when an exceptionally difficult case cannot be covered reliably through public behavior.
+
+## Comments
+
+Comments should be concise and relavant to explaining the algorithm or feature. It should not explain changes or a history of the codebase. Comments should serve as documentation. Use simple punctuation. Do not use semicolons or em dashes, for example.
