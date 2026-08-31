@@ -1,7 +1,7 @@
 import type { World } from 'koota';
 import { Input, Keys, Player } from '../traits';
 
-export function updatePlayerMovement(world: World) {
+export function updatePlayerInput(world: World) {
   const keys = world.get(Keys)!;
 
   world.query(Player, Input).updateEach(([input]) => {

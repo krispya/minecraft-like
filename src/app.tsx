@@ -36,17 +36,12 @@ function Startup() {
   const { spawnPlayer, spawnGround, spawnCamera } = useActions(actions);
 
   useEffect(() => {
-    const players = Array.from({ length: 10 }, () =>
-      spawnPlayer({
-        position: [(Math.random() - 0.5) * 20, Math.random() * 10, (Math.random() - 0.5) * 20],
-      })
-    );
-
+    const player = spawnPlayer({ position: [0, 10, 0] });
     const ground = spawnGround();
     const camera = spawnCamera({ orbit: { damping: 8 } });
 
     return () => {
-      for (const player of players) player.destroy();
+      player.destroy();
       ground.destroy();
       camera.destroy();
     };

@@ -2,12 +2,12 @@ import type { World } from 'koota';
 import { useEffect } from 'react';
 import { useWorld } from 'koota/react';
 import { applyGravity } from './system/apply-gravity';
-import { applyInput } from './system/apply-input';
 import { moveEntity } from './system/move-entity';
 import { applyOrbit, moveOrbit, updateOrbitController } from './system/orbit-controller';
-import { updatePlayerMovement } from './system/update-player-movement';
 import { resetInputDelta } from './system/reset-input';
 import { resolveGroundCollision } from './system/resolve-ground-collision';
+import { updateCharacterController } from './system/update-character-controller';
+import { updatePlayerInput } from './system/update-player-input';
 import { updateTime } from './system/update-time';
 import { Keys, Pointer, Wheel } from './traits';
 import { useAnimationFrame } from './utils/use-animation-frame';
@@ -21,10 +21,10 @@ export function Frameloop() {
   useAnimationFrame(() => {
     updateTime(world);
 
-    updatePlayerMovement(world);
+    updatePlayerInput(world);
     updateOrbitController(world);
 
-    applyInput(world);
+    updateCharacterController(world);
     applyGravity(world);
 
     moveEntity(world);

@@ -19,6 +19,12 @@ export const Position = trait(() => new Vector3());
 export const Rotation = trait(() => new Quaternion());
 export const Velocity = trait(() => new Vector3());
 
+export const CharacterController = trait({
+  maxSpeed: 5,
+  acceleration: 50,
+  friction: 70,
+  gravity: -24,
+});
 export const BoundingBox = trait({ width: 1, height: 1, depth: 1 });
 export const IsGrounded = trait();
 export const Physical = trait({ mass: 1 });
