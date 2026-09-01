@@ -17,6 +17,7 @@ import {
 
 import { BlockRenderer } from './view/block-renderer';
 import { CameraRenderer } from './view/camera-renderer';
+import { FirstPersonView } from './view/first-person-view';
 import { GroundRenderer } from './view/ground-renderer';
 import { PlayerRenderer } from './view/player-renderer';
 
@@ -32,6 +33,7 @@ export function App() {
         <GroundRenderer />
         <BlockRenderer />
         <CameraRenderer />
+        <FirstPersonView />
       </Canvas>
 
       <Frameloop />
@@ -45,10 +47,13 @@ export function App() {
 
 function Startup() {
   const world = useWorld();
-  const { spawnPlayer, spawnGround, spawnBlockAt, spawnCamera } = useActions(actions);
+  const { spawnPlayer, spawnGround, spawnBlockAt, spawnCamera, spawnItem, equipItem } =
+    useActions(actions);
 
   useEffect(() => {
     const player = spawnPlayer({ position: [0, 10, 0] });
+    const hammer = spawnItem('hammer');
+    equipItem(player, hammer);
     const ground = spawnGround();
     spawnBlockAt(new Vector3(0, 0.5, -5));
     const camera = spawnCamera();
@@ -60,12 +65,13 @@ function Startup() {
     );
 
     return () => {
+      hammer.destroy();
       player.destroy();
       ground.destroy();
       Array.from(world.query(Block)).forEach((block) => block.destroy());
       camera.destroy();
     };
-  }, [spawnBlockAt, spawnCamera, spawnGround, spawnPlayer, world]);
+  }, [equipItem, spawnBlockAt, spawnCamera, spawnGround, spawnItem, spawnPlayer, world]);
 
   return null;
 }

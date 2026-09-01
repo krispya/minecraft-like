@@ -1,25 +1,38 @@
 import { useAnimations, useGLTF } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
+import { createPortal, useFrame } from '@react-three/fiber';
 import { Entity } from 'koota';
-import { useQuery, useQueryFirst, useTag, useTrait } from 'koota/react';
+import { useQuery, useQueryFirst, useTag, useTrait, useWorld } from 'koota/react';
 import { useEffect, useMemo, useRef } from 'react';
-import { AnimationAction, AnimationClip, Box3, Mesh, Object3D, Vector3 } from 'three';
+import {
+  type AnimationAction,
+  AnimationClip,
+  AnimationUtils,
+  Box3,
+  LoopOnce,
+  Mesh,
+  Object3D,
+  Vector3,
+} from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import minecraftCharacterUrl from '../assets/minecraft-character/source/model.gltf?url';
 import {
   BoxCollider,
   Camera,
   Follows,
+  HeldBy,
   IsAirborne,
   IsFirstPerson,
   IsIdle,
   IsWalking,
+  Item,
   Player,
   Position,
   Rotation,
+  ToolSwing,
   Velocity,
 } from '../traits';
 import { BoxColliderDebug } from './box-collider-debug';
+import { ItemView } from './item-view';
 
 export function PlayerRenderer() {
   const player = useQuery(Player, Position);
@@ -41,6 +54,8 @@ function PlayerView({ entity }: { entity: Entity }) {
   const position = useTrait(entity, Position);
   const rotation = useTrait(entity, Rotation);
   const isFirstPerson = useQueryFirst(Camera, IsFirstPerson, Follows(entity)) !== undefined;
+  const rightArmJoint = useMemo(() => model.getObjectByName('RightArm'), [model]);
+  const heldItem = useQueryFirst(Item, HeldBy(entity));
 
   useCharacterAnimation(entity, animations, model);
 
@@ -53,23 +68,33 @@ function PlayerView({ entity }: { entity: Entity }) {
     });
   }, [model]);
 
+  if (isFirstPerson) return null;
+
   return (
     <>
-      {!isFirstPerson && (
-        <>
-          <group position={position?.toArray()} quaternion={rotation?.toArray()}>
-            <primitive object={model} position={modelOffset} />
-          </group>
-          <BoxColliderDebug entity={entity} />
-        </>
-      )}
+      <group position={position?.toArray()} quaternion={rotation?.toArray()}>
+        <primitive object={model} position={modelOffset} />
+        {rightArmJoint &&
+          heldItem &&
+          createPortal(<ItemView item={heldItem} display="thirdPerson" />, rightArmJoint)}
+      </group>
+      <BoxColliderDebug entity={entity} />
     </>
   );
 }
 
 function useCharacterAnimation(entity: Entity, animations: AnimationClip[], model: Object3D) {
+  const world = useWorld();
   const activeAction = useRef<AnimationAction | null>(null);
-  const { actions } = useAnimations(animations, model);
+  // The swing is additive so it layers over whichever locomotion clip is playing.
+  const clips = useMemo(
+    () =>
+      animations.map((clip) =>
+        clip.name === 'tool_swing' ? AnimationUtils.makeClipAdditive(clip.clone()) : clip
+      ),
+    [animations]
+  );
+  const { actions } = useAnimations(clips, model);
   const isIdle = useTag(entity, IsIdle);
   const isWalking = useTag(entity, IsWalking);
   const isAirborne = useTag(entity, IsAirborne);
@@ -91,6 +116,18 @@ function useCharacterAnimation(entity: Entity, animations: AnimationClip[], mode
       activeAction.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    const swingAction = actions.tool_swing;
+    if (!swingAction) return;
+
+    return world.onAdd(ToolSwing, (swinging) => {
+      if (swinging !== entity) return;
+
+      const { duration } = swinging.get(ToolSwing)!;
+      swingAction.reset().setLoop(LoopOnce, 1).setDuration(duration).play();
+    });
+  }, [actions, entity, world]);
 
   useFrame(() => {
     const walkAction = actions.walking_test;

@@ -8,12 +8,15 @@ import {
   Camera,
   CharacterController,
   Ground,
+  HeldBy,
   Input,
   IsAirborne,
   IsFirstPerson,
   IsIdle,
   IsThirdPerson,
   IsWalking,
+  Item,
+  type ItemKind,
   Mining,
   PlaneCollider,
   Player,
@@ -113,6 +116,13 @@ export const actions = createActions((world) => {
     },
     spawnGround: () => {
       return world.spawn(Ground, PlaneCollider, Position);
+    },
+    spawnItem: (kind: ItemKind) => {
+      return world.spawn(Item({ kind }));
+    },
+    equipItem: (holder: Entity, item: Entity) => {
+      world.query(HeldBy(holder)).forEach((held) => held.remove(HeldBy(holder)));
+      item.add(HeldBy(holder));
     },
     swingTool,
     spawnBlockAt,

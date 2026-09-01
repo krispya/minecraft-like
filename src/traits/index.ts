@@ -48,6 +48,11 @@ export const BlockDamage = trait({ hits: 0, hitsToBreak: 3 });
 export const Mining = relation({ exclusive: true });
 export const Sky = trait();
 
+export type ItemKind = 'hammer';
+export const Item = trait({ kind: 'hammer' as ItemKind });
+// Item to holder, so views can query the item held by a given entity.
+export const HeldBy = relation({ exclusive: true });
+
 export const Camera = trait();
 export const Follows = relation({ exclusive: true });
 export const IsFirstPerson = trait();

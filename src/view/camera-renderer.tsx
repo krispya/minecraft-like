@@ -13,6 +13,11 @@ function CameraView({ entity }: { entity: Entity }) {
   const rotation = useTrait(entity, Rotation);
 
   return (
-    <PerspectiveCamera makeDefault position={position?.toArray()} quaternion={rotation?.toArray()} />
+    <PerspectiveCamera
+      makeDefault
+      fov={70}
+      position={position?.toArray()}
+      quaternion={rotation?.toArray()}
+    />
   );
 }
