@@ -71,17 +71,18 @@ export const actions = createActions((world) => {
       .some((block) => block.get(Position)?.equals(snappedPosition));
     if (isOccupied) return;
 
-    const intersectsPlayer = world.query(Player, Position, BoxCollider).some((player) => {
-      const playerPosition = player.get(Position)!;
-      const collider = player.get(BoxCollider)!;
+    // Blocks cannot be placed inside any moving body, like the player or a mob.
+    const intersectsBody = world.query(Velocity, Position, BoxCollider).some((body) => {
+      const bodyPosition = body.get(Position)!;
+      const collider = body.get(BoxCollider)!;
 
       return (
-        Math.abs(playerPosition.x - snappedPosition.x) < (collider.size.x + 1) / 2 &&
-        Math.abs(playerPosition.y - snappedPosition.y) < (collider.size.y + 1) / 2 &&
-        Math.abs(playerPosition.z - snappedPosition.z) < (collider.size.z + 1) / 2
+        Math.abs(bodyPosition.x - snappedPosition.x) < (collider.size.x + 1) / 2 &&
+        Math.abs(bodyPosition.y - snappedPosition.y) < (collider.size.y + 1) / 2 &&
+        Math.abs(bodyPosition.z - snappedPosition.z) < (collider.size.z + 1) / 2
       );
     });
-    if (intersectsPlayer) return;
+    if (intersectsBody) return;
 
     return world.spawn(Block, BlockDamage, Position(snappedPosition), BoxCollider);
   };
