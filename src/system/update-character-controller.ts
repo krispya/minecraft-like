@@ -1,22 +1,12 @@
 import type { World } from 'koota';
-import {
-  BoundingBox,
-  CharacterController,
-  Ground,
-  Input,
-  IsGrounded,
-  Position,
-  Time,
-  Velocity,
-} from '../traits';
+import { CharacterController, Input, IsGrounded, Position, Time, Velocity } from '../traits';
 
 export function updateCharacterController(world: World) {
   const { delta } = world.get(Time)!;
-  const groundPosition = world.queryFirst(Ground, Position)?.get(Position);
 
   world
-    .query(CharacterController, Input, Position, Velocity, BoundingBox)
-    .updateEach(([controller, input, position, velocity, boundingBox], entity) => {
+    .query(CharacterController, Input, Position, Velocity)
+    .updateEach(([controller, input, position, velocity], entity) => {
       const hasInput = input.x !== 0 || input.y !== 0;
       const targetX = input.x * controller.maxSpeed;
       const targetZ = -input.y * controller.maxSpeed;
@@ -47,21 +37,5 @@ export function updateCharacterController(world: World) {
       position.x += velocity.x * delta;
       position.y += velocity.y * delta;
       position.z += velocity.z * delta;
-
-      if (groundPosition === undefined) {
-        entity.remove(IsGrounded);
-        return;
-      }
-
-      const groundedHeight = groundPosition.y + boundingBox.height / 2;
-
-      if (position.y > groundedHeight) {
-        entity.remove(IsGrounded);
-        return;
-      }
-
-      position.y = groundedHeight;
-      if (velocity.y < 0) velocity.y = 0;
-      entity.add(IsGrounded);
     });
 }

@@ -5,7 +5,7 @@ import { applyGravity } from './system/apply-gravity';
 import { moveEntity } from './system/move-entity';
 import { applyOrbit, moveOrbit, updateOrbitController } from './system/orbit-controller';
 import { resetInputDelta } from './system/reset-input';
-import { resolveGroundCollision } from './system/resolve-ground-collision';
+import { resolveBoxPlaneCollisions } from './system/resolve-box-plane-collisions';
 import { updateCharacterController } from './system/update-character-controller';
 import { updateFollowTarget } from './system/update-follow-target';
 import { updatePlayerInput } from './system/update-player-input';
@@ -29,7 +29,7 @@ export function Frameloop() {
     applyGravity(world);
 
     moveEntity(world);
-    resolveGroundCollision(world);
+    resolveBoxPlaneCollisions(world);
 
     updateFollowTarget(world);
     moveOrbit(world);

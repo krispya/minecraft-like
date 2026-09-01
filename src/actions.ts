@@ -1,12 +1,12 @@
 import { createActions } from 'koota';
 import { Quaternion, Vector3 } from 'three';
 import {
-  BoundingBox,
+  BoxCollider,
   Camera,
   CharacterController,
   Ground,
   Input,
-  Physical,
+  PlaneCollider,
   Player,
   Position,
   Rotation,
@@ -22,11 +22,11 @@ export const actions = createActions((world) => ({
       Position(new Vector3(position[0], position[1], position[2])),
       Rotation(new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3])),
       Velocity,
-      BoundingBox({ width: 1, height: 2.8, depth: 1 })
+      BoxCollider({ size: new Vector3(1, 2.8, 1) })
     );
   },
   spawnGround: () => {
-    return world.spawn(Ground, Position, Physical);
+    return world.spawn(Ground, PlaneCollider, Position);
   },
   spawnCamera: ({ position = [0, 0, 0], rotation = [0, 0, 0, 1] } = {}) => {
     return world.spawn(

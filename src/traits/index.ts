@@ -26,9 +26,10 @@ export const CharacterController = trait({
   gravity: -24,
   jumpSpeed: 8,
 });
-export const BoundingBox = trait({ width: 1, height: 1, depth: 1 });
+export const BoxCollider = trait({ size: () => new Vector3(1, 1, 1) });
+export const PlaneCollider = trait({ normal: () => new Vector3(0, 1, 0) });
 export const IsGrounded = trait();
-export const Physical = trait({ mass: 1 });
+export const DynamicBody = trait({ mass: 1 });
 
 export const Player = trait();
 export const Ground = trait();
