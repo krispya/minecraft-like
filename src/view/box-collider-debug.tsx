@@ -6,7 +6,7 @@ export function BoxColliderDebug({ entity }: { entity: Entity }) {
   const box = useTrait(entity, BoxCollider);
   const position = useTrait(entity, Position);
 
-  if (!box || !position) return null;
+  if (!box || !position || !new URLSearchParams(window.location.search).has('debug')) return null;
 
   return (
     <mesh position={position.toArray()} renderOrder={1}>
