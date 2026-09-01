@@ -23,6 +23,7 @@ import {
   IsAirborne,
   IsFirstPerson,
   IsIdle,
+  IsRiding,
   IsWalking,
   Item,
   Player,
@@ -98,17 +99,18 @@ function useCharacterAnimation(entity: Entity, animations: AnimationClip[], mode
   const isIdle = useTag(entity, IsIdle);
   const isWalking = useTag(entity, IsWalking);
   const isAirborne = useTag(entity, IsAirborne);
+  const isRiding = useTag(entity, IsRiding);
 
   useEffect(() => {
-    if (!isIdle && !isWalking && !isAirborne) return;
+    if (!isRiding && !isIdle && !isWalking && !isAirborne) return;
 
-    const nextAction = actions[isWalking ? 'walking_test' : 'still_test'];
+    const nextAction = actions[isRiding ? 'riding' : isWalking ? 'walking_test' : 'still_test'];
     if (!nextAction || nextAction === activeAction.current) return;
 
     nextAction.reset().fadeIn(0.15).play();
     activeAction.current?.fadeOut(0.15);
     activeAction.current = nextAction;
-  }, [actions, isAirborne, isIdle, isWalking]);
+  }, [actions, isAirborne, isIdle, isRiding, isWalking]);
 
   useEffect(() => {
     return () => {

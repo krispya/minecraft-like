@@ -16,6 +16,8 @@ import { updateCharacterState } from './system/update-character-state';
 import { updateFollowTarget } from './system/update-follow-target';
 import { updatePlayerInput } from './system/update-player-input';
 import { updateTime } from './system/update-time';
+import { updateMountInput } from './system/update-mount-input';
+import { updateRiders } from './system/update-riders';
 import { updateWanderInput } from './system/update-wander-input';
 import { subscribeToolSwing, updateToolSwing } from './system/tool-swing';
 import { useAnimationFrame } from './utils/use-animation-frame';
@@ -35,6 +37,7 @@ export function Frameloop() {
 
     updatePlayerInput(world);
     updateWanderInput(world);
+    updateMountInput(world);
     updateOrbitController(world);
     updateFirstPersonController(world);
 
@@ -45,6 +48,7 @@ export function Frameloop() {
     resolveBoxPlaneCollisions(world);
     resolveBoxCollisions(world);
     updateCharacterState(world);
+    updateRiders(world);
 
     updateFollowTarget(world);
     moveOrbit(world);

@@ -1,8 +1,8 @@
-import type { World } from 'koota';
-import { BoxCollider, IsGrounded, Position, Velocity } from '../traits';
+import { Not, type World } from 'koota';
+import { BoxCollider, IsGrounded, IsRiding, Position, Velocity } from '../traits';
 
 export function resolveBoxCollisions(world: World) {
-  const colliders = world.query(Position, BoxCollider);
+  const colliders = world.query(Position, BoxCollider, Not(IsRiding));
 
   world
     .query(Position, Velocity, BoxCollider)

@@ -12,7 +12,9 @@ import {
   Input,
   IsAirborne,
   IsFirstPerson,
+  IsGrounded,
   IsIdle,
+  IsRiding,
   IsThirdPerson,
   IsWalking,
   Item,
@@ -23,11 +25,17 @@ import {
   PlaneCollider,
   Player,
   Position,
+  Rideable,
+  Rides,
   Rotation,
   ToolSwing,
   Velocity,
   Wander,
 } from './traits';
+
+const PLAYER_COLLIDER_SIZE = new Vector3(0.6, 2, 0.6);
+// How close a mount has to be to climb on.
+const MOUNT_RANGE = 3;
 
 export const actions = createActions((world) => {
   const isWithinReach = (point: Vector3) => {
@@ -95,6 +103,7 @@ export const actions = createActions((world) => {
       Npc,
       Pig,
       Wander,
+      Rideable,
       // Pigs amble: slower than the player and slower to turn. They never jump.
       CharacterController({ maxSpeed: 1.5, acceleration: 15, turnSpeed: 4 }),
       IsIdle,
@@ -125,6 +134,60 @@ export const actions = createActions((world) => {
     });
   };
 
+  const mount = (rider: Entity, target: Entity) => {
+    // Without Velocity the rider drops out of every physics system.
+    rider.remove(Velocity, IsGrounded);
+    rider.add(Rides(target), IsRiding);
+  };
+
+  const dismount = (rider: Entity) => {
+    const target = rider.targetFor(Rides);
+    if (!target) return;
+
+    const targetPosition = target.get(Position)!;
+    const targetSize = target.get(BoxCollider)?.size ?? new Vector3(1, 1, 1);
+    const riderSize = rider.get(BoxCollider)?.size ?? PLAYER_COLLIDER_SIZE;
+
+    // Stand on the mount's back, then jump off carrying its momentum.
+    const riderPosition = rider.get(Position)!;
+    riderPosition.copy(targetPosition);
+    riderPosition.y += (targetSize.y + riderSize.y) / 2;
+    rider.changed(Position);
+
+    const velocity = target.get(Velocity)?.clone() ?? new Vector3();
+    velocity.y = rider.get(CharacterController)?.jumpSpeed ?? 0;
+
+    rider.remove(Rides(target), IsRiding);
+    rider.add(Velocity(velocity));
+  };
+
+  const toggleMount = () => {
+    const player = world.queryFirst(Player, Position);
+    if (!player) return;
+
+    if (player.targetFor(Rides)) {
+      dismount(player);
+      return;
+    }
+
+    const origin = player.get(Position)!;
+    let nearest: Entity | undefined;
+    let nearestDistance = MOUNT_RANGE;
+
+    world.query(Rideable, Position).forEach((candidate) => {
+      // One rider per mount.
+      if (world.queryFirst(Rides(candidate))) return;
+
+      const distance = candidate.get(Position)!.distanceTo(origin);
+      if (distance >= nearestDistance) return;
+
+      nearest = candidate;
+      nearestDistance = distance;
+    });
+
+    if (nearest) mount(player, nearest);
+  };
+
   return {
     spawnPlayer: ({ position = [0, 0, 0], rotation = [0, 0, 0, 1] } = {}) => {
       return world.spawn(
@@ -136,11 +199,12 @@ export const actions = createActions((world) => {
         Position(new Vector3(position[0], position[1], position[2])),
         Rotation(new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3])),
         Velocity,
-        BoxCollider({ size: new Vector3(0.6, 2, 0.6) })
+        BoxCollider({ size: PLAYER_COLLIDER_SIZE.clone() })
       );
     },
     spawnPig,
     spawnPigNearPlayer,
+    toggleMount,
     transitionCharacter: (entity: Entity, state: TagTrait) => {
       if (entity.has(state)) return;
 
