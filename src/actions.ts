@@ -18,12 +18,15 @@ import {
   Item,
   type ItemKind,
   Mining,
+  Npc,
+  Pig,
   PlaneCollider,
   Player,
   Position,
   Rotation,
   ToolSwing,
   Velocity,
+  Wander,
 } from './traits';
 
 export const actions = createActions((world) => {
@@ -87,6 +90,41 @@ export const actions = createActions((world) => {
     return world.spawn(Block, BlockDamage, Position(snappedPosition), BoxCollider);
   };
 
+  const spawnPig = ({ position = [0, 0, 0] } = {}) => {
+    return world.spawn(
+      Npc,
+      Pig,
+      Wander,
+      // Pigs amble: slower than the player and slower to turn. They never jump.
+      CharacterController({ maxSpeed: 1.5, acceleration: 15, turnSpeed: 4 }),
+      IsIdle,
+      Input,
+      Position(new Vector3(position[0], position[1], position[2])),
+      Rotation,
+      Velocity,
+      // Minecraft's pig hitbox.
+      BoxCollider({ size: new Vector3(0.9, 0.9, 0.9) })
+    );
+  };
+
+  // Drops a pig a few blocks from the player in a random direction.
+  const spawnPigNearPlayer = ({ minDistance = 2, maxDistance = 4 } = {}) => {
+    const player = world.queryFirst(Player, Position);
+    if (!player) return;
+
+    const origin = player.get(Position)!;
+    const angle = Math.random() * Math.PI * 2;
+    const distance = minDistance + Math.random() * (maxDistance - minDistance);
+
+    return spawnPig({
+      position: [
+        origin.x + Math.cos(angle) * distance,
+        origin.y + 1,
+        origin.z + Math.sin(angle) * distance,
+      ],
+    });
+  };
+
   return {
     spawnPlayer: ({ position = [0, 0, 0], rotation = [0, 0, 0, 1] } = {}) => {
       return world.spawn(
@@ -101,6 +139,8 @@ export const actions = createActions((world) => {
         BoxCollider({ size: new Vector3(0.6, 2, 0.6) })
       );
     },
+    spawnPig,
+    spawnPigNearPlayer,
     transitionCharacter: (entity: Entity, state: TagTrait) => {
       if (entity.has(state)) return;
 

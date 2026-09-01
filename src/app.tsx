@@ -12,6 +12,7 @@ import {
   IsThirdPerson,
   Keys,
   OrbitController,
+  Pig,
   Time,
 } from './traits';
 
@@ -19,6 +20,7 @@ import { BlockRenderer } from './view/block-renderer';
 import { CameraRenderer } from './view/camera-renderer';
 import { FirstPersonView } from './view/first-person-view';
 import { GroundRenderer } from './view/ground-renderer';
+import { PigRenderer } from './view/pig-renderer';
 import { PlayerRenderer } from './view/player-renderer';
 
 export function App() {
@@ -30,6 +32,7 @@ export function App() {
         <pointLight castShadow intensity={0.8 * Math.PI} decay={0} position={[100, 100, 100]} />
 
         <PlayerRenderer />
+        <PigRenderer />
         <GroundRenderer />
         <BlockRenderer />
         <CameraRenderer />
@@ -69,6 +72,7 @@ function Startup() {
       player.destroy();
       ground.destroy();
       Array.from(world.query(Block)).forEach((block) => block.destroy());
+      Array.from(world.query(Pig)).forEach((pig) => pig.destroy());
       camera.destroy();
     };
   }, [equipItem, spawnBlockAt, spawnCamera, spawnGround, spawnItem, spawnPlayer, world]);

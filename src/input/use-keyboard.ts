@@ -6,7 +6,7 @@ import { Keys } from '../traits';
 export function useKeyboard(world: World) {
   useEffect(() => {
     const keys = world.get(Keys)!;
-    const { toggleCameraPerspective } = actions(world);
+    const { toggleCameraPerspective, spawnPigNearPlayer } = actions(world);
 
     const setKey = (key: string, pressed: boolean) => {
       if (pressed) keys.add(key);
@@ -19,6 +19,7 @@ export function useKeyboard(world: World) {
       const key = event.key.toLowerCase();
 
       if (key === 'f' && !keys.has(key)) toggleCameraPerspective();
+      if (key === 'r' && !keys.has(key)) spawnPigNearPlayer();
 
       setKey(key, true);
     };

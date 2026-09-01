@@ -78,3 +78,19 @@ export const OrbitController = trait({
   minDistance: 2,
   maxDistance: 4,
 });
+
+export const Npc = trait();
+export const Pig = trait();
+// Random stroll: rest for a while, then walk in a random direction for a while.
+export const Wander = trait({
+  // Unit vector in Input space, or zero while resting.
+  heading: () => new Vector2(),
+  // Seconds left in the current rest or walk.
+  timer: 0,
+  // Seconds spent pushing against something while walking.
+  blocked: 0,
+  minRest: 1,
+  maxRest: 4,
+  minWalk: 1,
+  maxWalk: 3,
+});
