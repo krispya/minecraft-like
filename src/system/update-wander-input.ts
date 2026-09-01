@@ -31,7 +31,7 @@ export function updateWanderInput(world: World) {
         wander.timer = randomBetween(wander.minRest, wander.maxRest);
       } else {
         const angle = Math.random() * Math.PI * 2;
-        wander.heading.set(Math.cos(angle), Math.sin(angle));
+        wander.heading.set(Math.cos(angle), Math.sin(angle)).multiplyScalar(wander.speed);
         wander.timer = randomBetween(wander.minWalk, wander.maxWalk);
       }
     }

@@ -93,6 +93,8 @@ export const Wander = trait({
   maxRest: 4,
   minWalk: 1,
   maxWalk: 3,
+  // Fraction of the controller's max speed to amble at.
+  speed: 0.25,
 });
 
 // Something a character can sit on. The seat is where the rider's Position goes, in local space.

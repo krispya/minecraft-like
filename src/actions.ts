@@ -104,8 +104,8 @@ export const actions = createActions((world) => {
       Pig,
       Wander,
       Rideable,
-      // Pigs amble: slower than the player and slower to turn. They never jump.
-      CharacterController({ maxSpeed: 1.5, acceleration: 15, turnSpeed: 4 }),
+      // Faster than the player when ridden. Wander scales the heading down so loose pigs amble.
+      CharacterController({ maxSpeed: 7, acceleration: 40, turnSpeed: 6 }),
       IsIdle,
       Input,
       Position(new Vector3(position[0], position[1], position[2])),

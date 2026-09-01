@@ -10,7 +10,6 @@ export function updateMountInput(world: World) {
       const mount = rider.targetFor(Rides);
       if (!mount?.has(Input)) return;
 
-      // Mounts never jump.
-      mount.set(Input, { x: input.x, y: input.y, jump: false });
+      mount.set(Input, { x: input.x, y: input.y, jump: input.jump });
     });
 }
