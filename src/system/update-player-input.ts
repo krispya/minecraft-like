@@ -17,5 +17,6 @@ export function updatePlayerInput(world: World) {
 
     input.x = x / length;
     input.y = y / length;
+    input.jump = keys.has(' ');
   });
 }

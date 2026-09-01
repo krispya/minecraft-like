@@ -23,7 +23,7 @@ export function updateCharacterController(world: World) {
       const changeX = targetX - velocity.x;
       const changeZ = targetZ - velocity.z;
       const changeLength = Math.hypot(changeX, changeZ);
-      const isGrounded = entity.has(IsGrounded);
+      let isGrounded = entity.has(IsGrounded);
       const rate = hasInput ? controller.acceleration : isGrounded ? controller.friction : 0;
       const maxChange = rate * delta;
 
@@ -34,6 +34,12 @@ export function updateCharacterController(world: World) {
         const scale = maxChange / changeLength;
         velocity.x += changeX * scale;
         velocity.z += changeZ * scale;
+      }
+
+      if (isGrounded && input.jump) {
+        velocity.y = controller.jumpSpeed;
+        isGrounded = false;
+        entity.remove(IsGrounded);
       }
 
       if (!isGrounded) velocity.y += controller.gravity * delta;

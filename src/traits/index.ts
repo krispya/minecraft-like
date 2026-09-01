@@ -13,7 +13,7 @@ export const Pointer = trait({
 });
 // Positive when scrolling down.
 export const Wheel = trait({ delta: 0 });
-export const Input = trait({ x: 0, y: 0 });
+export const Input = trait({ x: 0, y: 0, jump: false });
 
 export const Position = trait(() => new Vector3());
 export const Rotation = trait(() => new Quaternion());
@@ -24,6 +24,7 @@ export const CharacterController = trait({
   acceleration: 50,
   friction: 70,
   gravity: -24,
+  jumpSpeed: 8,
 });
 export const BoundingBox = trait({ width: 1, height: 1, depth: 1 });
 export const IsGrounded = trait();
