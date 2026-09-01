@@ -1,9 +1,10 @@
-import { createActions } from 'koota';
+import { createActions, type Entity } from 'koota';
 import { Quaternion, Spherical, Vector3 } from 'three';
 import {
   BoundingBox,
   Camera,
   CharacterController,
+  Follows,
   Ground,
   Input,
   OrbitController,
@@ -29,13 +30,17 @@ export const actions = createActions((world) => ({
   spawnGround: () => {
     return world.spawn(Ground, Position, Physical);
   },
-  spawnCamera: ({
-    position = [0, 0, 0],
-    rotation = [0, 0, 0, 1],
-    orbit: { spherical = [30, Math.PI / 3, Math.PI / 4], target = [0, 2, 0], damping = 8 } = {},
-  } = {}) => {
+  spawnCamera: (
+    follows: Entity,
+    {
+      position = [0, 0, 0],
+      rotation = [0, 0, 0, 1],
+      orbit: { spherical = [30, Math.PI / 3, Math.PI / 4], target = [0, 2, 0], damping = 8 } = {},
+    } = {}
+  ) => {
     return world.spawn(
       Camera,
+      Follows(follows),
       Position(new Vector3(position[0], position[1], position[2])),
       Rotation(new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3])),
       OrbitController({

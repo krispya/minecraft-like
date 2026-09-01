@@ -38,7 +38,7 @@ function Startup() {
   useEffect(() => {
     const player = spawnPlayer({ position: [0, 10, 0] });
     const ground = spawnGround();
-    const camera = spawnCamera({ orbit: { damping: 8 } });
+    const camera = spawnCamera(player, { orbit: { damping: 8 } });
 
     return () => {
       player.destroy();

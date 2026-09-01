@@ -1,4 +1,4 @@
-import { trait } from 'koota';
+import { relation, trait } from 'koota';
 import { Quaternion, Spherical, Vector2, Vector3 } from 'three';
 
 export const Time = trait({ delta: 0, current: 0 });
@@ -34,6 +34,7 @@ export const Ground = trait();
 export const Sky = trait();
 
 export const Camera = trait();
+export const Follows = relation({ exclusive: true });
 
 export const OrbitController = trait({
   // Offset from the target.
