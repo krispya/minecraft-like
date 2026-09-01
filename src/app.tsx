@@ -2,10 +2,20 @@ import { Sky } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { useActions, useTrait, useWorld } from 'koota/react';
 import { useEffect } from 'react';
+import { Vector3 } from 'three';
 import { actions } from './actions';
 import { Frameloop } from './frameloop';
-import { FirstPersonController, Follows, IsThirdPerson, Keys, OrbitController, Time } from './traits';
+import {
+  Block,
+  FirstPersonController,
+  Follows,
+  IsThirdPerson,
+  Keys,
+  OrbitController,
+  Time,
+} from './traits';
 
+import { BlockRenderer } from './view/block-renderer';
 import { CameraRenderer } from './view/camera-renderer';
 import { GroundRenderer } from './view/ground-renderer';
 import { PlayerRenderer } from './view/player-renderer';
@@ -20,6 +30,7 @@ export function App() {
 
         <PlayerRenderer />
         <GroundRenderer />
+        <BlockRenderer />
         <CameraRenderer />
       </Canvas>
 
@@ -33,11 +44,13 @@ export function App() {
 }
 
 function Startup() {
-  const { spawnPlayer, spawnGround, spawnCamera } = useActions(actions);
+  const world = useWorld();
+  const { spawnPlayer, spawnGround, spawnBlockAt, spawnCamera } = useActions(actions);
 
   useEffect(() => {
     const player = spawnPlayer({ position: [0, 10, 0] });
     const ground = spawnGround();
+    spawnBlockAt(new Vector3(0, 0.5, -5));
     const camera = spawnCamera();
     camera.add(
       OrbitController({ damping: 8 }),
@@ -49,9 +62,10 @@ function Startup() {
     return () => {
       player.destroy();
       ground.destroy();
+      Array.from(world.query(Block)).forEach((block) => block.destroy());
       camera.destroy();
     };
-  }, [spawnGround, spawnPlayer, spawnCamera]);
+  }, [spawnBlockAt, spawnCamera, spawnGround, spawnPlayer, world]);
 
   return null;
 }

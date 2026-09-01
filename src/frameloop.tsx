@@ -9,6 +9,7 @@ import { applyFirstPerson, updateFirstPersonController } from './system/first-pe
 import { moveEntity } from './system/move-entity';
 import { applyOrbit, moveOrbit, updateOrbitController } from './system/orbit-controller';
 import { resetInputDelta } from './system/reset-input';
+import { resolveBoxCollisions } from './system/resolve-box-collisions';
 import { resolveBoxPlaneCollisions } from './system/resolve-box-plane-collisions';
 import { updateCharacterController } from './system/update-character-controller';
 import { updateCharacterState } from './system/update-character-state';
@@ -37,6 +38,7 @@ export function Frameloop() {
 
     moveEntity(world);
     resolveBoxPlaneCollisions(world);
+    resolveBoxCollisions(world);
     updateCharacterState(world);
 
     updateFollowTarget(world);

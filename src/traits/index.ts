@@ -38,6 +38,7 @@ export const DynamicBody = trait({ mass: 1 });
 
 export const Player = trait();
 export const Ground = trait();
+export const Block = trait();
 export const Sky = trait();
 
 export const Camera = trait();
