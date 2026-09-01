@@ -1,11 +1,9 @@
 import { createActions, type Entity, type TagTrait } from 'koota';
-import { Euler, MathUtils, Quaternion, Vector3 } from 'three';
+import { Quaternion, Vector3 } from 'three';
 import {
   BoxCollider,
   Camera,
   CharacterController,
-  FirstPersonController,
-  Follows,
   Ground,
   Input,
   IsAirborne,
@@ -13,7 +11,6 @@ import {
   IsIdle,
   IsThirdPerson,
   IsWalking,
-  OrbitController,
   PlaneCollider,
   Player,
   Position,
@@ -42,33 +39,10 @@ export const actions = createActions((world) => ({
   },
   toggleCameraPerspective: () => {
     world.query(Camera).forEach((camera) => {
-      const firstPerson = camera.get(FirstPersonController);
-      const orbit = camera.get(OrbitController);
-      if (!firstPerson || !orbit) return;
+      const perspective = camera.has(IsFirstPerson) ? IsThirdPerson : IsFirstPerson;
 
-      if (camera.has(IsFirstPerson)) {
-        orbit.spherical.theta = firstPerson.yaw;
-        orbit.spherical.phi = MathUtils.clamp(
-          Math.PI / 2 + firstPerson.pitch,
-          0.000001,
-          Math.PI - 0.000001
-        );
-        orbit.velocity.set(0, 0, 0);
-        camera.changed(OrbitController);
-
-        camera.remove(IsFirstPerson);
-        camera.add(IsThirdPerson);
-        return;
-      }
-
-      const forwardRotation = camera.targetFor(Follows)?.get(Rotation) ?? camera.get(Rotation);
-      if (!forwardRotation) return;
-
-      const euler = new Euler().setFromQuaternion(forwardRotation, 'YXZ');
-      camera.set(FirstPersonController, { ...firstPerson, yaw: euler.y, pitch: 0 });
-
-      camera.remove(IsThirdPerson);
-      camera.add(IsFirstPerson);
+      camera.remove(IsFirstPerson, IsThirdPerson);
+      camera.add(perspective);
     });
   },
   spawnGround: () => {

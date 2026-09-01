@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useWorld } from 'koota/react';
 import { actions } from './actions';
 import { applyGravity } from './system/apply-gravity';
+import { subscribeCameraControllerSwap } from './system/camera-controller-swap';
 import { applyFirstPerson, updateFirstPersonController } from './system/first-person-controller';
 import { moveEntity } from './system/move-entity';
 import { applyOrbit, moveOrbit, updateOrbitController } from './system/orbit-controller';
@@ -21,6 +22,8 @@ export function Frameloop() {
   useKeyboard(world);
   usePointer(world);
   useWheel(world);
+
+  useEffect(() => subscribeCameraControllerSwap(world), [world]);
 
   useAnimationFrame(() => {
     updateTime(world);
