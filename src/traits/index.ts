@@ -55,7 +55,7 @@ export const FirstPersonController = trait({
 
 export const OrbitController = trait({
   // Offset from the target.
-  spherical: () => new Spherical(10, Math.PI / 3, 0),
+  spherical: () => new Spherical(4, Math.PI / 3, 0),
   target: () => new Vector3(),
   // Angular and log-radius velocity.
   velocity: () => new Spherical(0, 0, 0),
@@ -64,5 +64,5 @@ export const OrbitController = trait({
   // E-folds per second.
   damping: 8,
   minDistance: 2,
-  maxDistance: 20,
+  maxDistance: 4,
 });
