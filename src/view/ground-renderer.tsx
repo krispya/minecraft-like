@@ -14,15 +14,16 @@ export function GroundRenderer() {
 }
 
 function GroundView({ entity }: { entity: Entity }) {
-  const { placeBlock } = useActions(actions);
+  const { interactWith } = useActions(actions);
   const texture = useTexture(grassImg);
   texture.wrapS = texture.wrapT = RepeatWrapping;
   const position = useTrait(entity, Position);
 
-  const handlePlace = (event: ThreeEvent<MouseEvent>) => {
-    event.nativeEvent.preventDefault();
+  const handlePointerDown = (event: ThreeEvent<PointerEvent>) => {
+    if (event.button !== 0 || !event.face) return;
+
     event.stopPropagation();
-    if (event.face) placeBlock(entity, { point: event.point, normal: event.face.normal });
+    interactWith(entity, { point: event.point, normal: event.face.normal });
   };
 
   return (
@@ -30,7 +31,7 @@ function GroundView({ entity }: { entity: Entity }) {
       receiveShadow
       position={position?.toArray()}
       rotation-x={-Math.PI / 2}
-      onContextMenu={handlePlace}
+      onPointerDown={handlePointerDown}
     >
       <planeGeometry args={[1000, 1000]} />
       <meshStandardMaterial map={texture} map-repeat={[240, 240]} color="green" />

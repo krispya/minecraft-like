@@ -1,5 +1,6 @@
-import { relation, trait } from 'koota';
+import { type Entity, relation, trait } from 'koota';
 import { Quaternion, Spherical, Vector2, Vector3 } from 'three';
+import { BlockGrid } from '../block-grid';
 
 export const Time = trait({ delta: 0, current: 0 });
 
@@ -52,8 +53,10 @@ export const BlockDamage = trait({ hits: 0, hitsToBreak: 3 });
 export const Mining = relation({ exclusive: true });
 export const Sky = trait();
 
-export type ItemKind = 'hammer';
+export type ItemKind = 'block' | 'hammer';
 export const Item = trait({ kind: 'hammer' as ItemKind });
+// Item to owner, for everything an entity carries whether or not it is in hand.
+export const CarriedBy = relation({ exclusive: true });
 // Item to holder, so views can query the item held by a given entity.
 export const HeldBy = relation({ exclusive: true });
 
@@ -105,3 +108,24 @@ export const Wander = trait({
 // Forward is -z, so a positive z sits the rider further back.
 export const Rideable = trait({ seat: () => new Vector3(0, 0.75, 0.3) });
 export const Rides = relation({ exclusive: true });
+
+export type BlockKindName = 'grass' | 'dirt' | 'stone' | 'sand' | 'log' | 'leaves' | 'water' | 'snow';
+export const BlockKind = trait({ kind: 'dirt' as BlockKindName });
+// Blocks from world generation, so a new world only replaces the previous one.
+export const Terrain = trait();
+// World trait: every block entity indexed by cell.
+export const Blocks = trait(() => new BlockGrid());
+// Rises into place after a cue, so a new world can ripple outward from the player.
+export const Reveal = trait({ delay: 0, elapsed: 0, duration: 0.4 });
+
+export type PendingBlock = { x: number; y: number; z: number; kind: BlockKindName; delay: number };
+export type DoomedBlock = { entity: Entity; delay: number };
+// World trait: a world being built. Blocks spawn and old ones go just ahead of their reveal cue,
+// so the work spreads over the sweep instead of stalling a frame. Both lists are in cue order.
+export const Construction = trait(() => ({
+  pending: [] as PendingBlock[],
+  doomed: [] as DoomedBlock[],
+  nextPending: 0,
+  nextDoomed: 0,
+  elapsed: 0,
+}));

@@ -40,11 +40,6 @@ export function FirstPersonView() {
 const TICKS_PER_SECOND = 20;
 const DEG = MathUtils.DEG2RAD;
 
-// Minecraft's `firstperson_righthand` display for handheld items.
-const DISPLAY_TRANSLATION: [number, number, number] = [1.13 / 16, 3.2 / 16, 1.13 / 16];
-const DISPLAY_ROTATION: [number, number, number] = [0, -90 * DEG, 25 * DEG];
-const DISPLAY_SCALE = 0.68;
-
 const yAxis = new Vector3(0, 1, 0);
 const zAxis = new Vector3(0, 0, 1);
 const xAxis = new Vector3(1, 0, 0);
@@ -107,11 +102,7 @@ function HeldItem({ entity }: { entity: Entity }) {
 
   return (
     <group ref={bob}>
-      <group ref={arm}>
-        <group position={DISPLAY_TRANSLATION} rotation={DISPLAY_ROTATION} scale={DISPLAY_SCALE}>
-          {heldItem && <ItemView item={heldItem} display="firstPerson" />}
-        </group>
-      </group>
+      <group ref={arm}>{heldItem && <ItemView item={heldItem} display="firstPerson" />}</group>
     </group>
   );
 }

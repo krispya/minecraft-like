@@ -1,0 +1,17 @@
+Block textures in this folder come from Minetest Game (https://github.com/minetest/minetest_game),
+mods/default/textures, and are licensed CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/).
+
+  stone.png      <- default_stone.png
+  sand.png       <- default_sand.png
+  log_side.png   <- default_tree.png
+  log_top.png    <- default_tree_top.png
+  leaves.png     <- default_leaves.png
+  water.png      <- default_water.png
+  snow_top.png   <- default_snow.png
+
+Copyright (C) 2010-2023 the Minetest Game media authors, including celeron55 (Perttu Ahola),
+Cisoun, G4JC, VanessaE, RealBadAngel, Calinou, MirceaKitsune, Jordach, PilzAdam, jojoa1997,
+InfinityProject, Splizard, Zeg9, paramat, BlockMen, sofar, Neuromancer, Gambit, asl97, KevDoy,
+Mito551, GreenXenith, kaeza, kilbith, tobyplowy, CloudyProton, TumeniNodes, Mossmanikin,
+random-geek, Extex101, An0n3m0us, Lopano.
+See the full media license section in the upstream mods/default/license.txt.

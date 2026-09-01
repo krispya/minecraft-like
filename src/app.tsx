@@ -1,18 +1,21 @@
 import { Sky } from '@react-three/drei';
-import { Canvas } from '@react-three/fiber';
-import { useActions, useTrait, useWorld } from 'koota/react';
-import { useEffect } from 'react';
-import { Vector3 } from 'three';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { useActions, useQueryFirst, useTrait, useWorld } from 'koota/react';
+import { useEffect, useRef } from 'react';
+import { type DirectionalLight, Vector3 } from 'three';
 import { actions } from './actions';
 import { Frameloop } from './frameloop';
 import {
   Block,
+  Construction,
   FirstPersonController,
   Follows,
   IsThirdPerson,
   Keys,
   OrbitController,
   Pig,
+  Player,
+  Position,
   Time,
 } from './traits';
 
@@ -29,7 +32,7 @@ export function App() {
       <Canvas shadows camera={{ fov: 45 }}>
         <Sky sunPosition={[100, 20, 100]} />
         <ambientLight intensity={0.3 * Math.PI} />
-        <pointLight castShadow intensity={0.8 * Math.PI} decay={0} position={[100, 100, 100]} />
+        <Sun />
 
         <PlayerRenderer />
         <PigRenderer />
@@ -42,21 +45,66 @@ export function App() {
       <Frameloop />
       <Startup />
 
-      <Clock />
-      <KeysView />
+      {new URLSearchParams(window.location.search).has('debug') && (
+        <>
+          <Clock />
+          <KeysView />
+        </>
+      )}
     </>
+  );
+}
+
+// Where the sun sits relative to the player.
+const SUN_OFFSET = new Vector3(100, 100, 100);
+// Half-width of the square the sun casts shadows into, enough to cover a generated world.
+const SHADOW_EXTENT = 72;
+
+// A directional light needs one shadow pass where a point light needs six, which matters once a
+// world of blocks is casting. It follows the player so the shadow area covers wherever they are.
+function Sun() {
+  const light = useRef<DirectionalLight>(null);
+  const player = useQueryFirst(Player, Position);
+
+  useFrame(() => {
+    const sun = light.current;
+    const center = player?.get(Position);
+    if (!sun || !center) return;
+
+    sun.position.copy(center).add(SUN_OFFSET);
+    sun.target.position.copy(center);
+    sun.target.updateMatrixWorld();
+  });
+
+  return (
+    <directionalLight
+      ref={light}
+      castShadow
+      intensity={0.8 * Math.PI}
+      position={SUN_OFFSET}
+      shadow-mapSize={[2048, 2048]}
+      shadow-camera-left={-SHADOW_EXTENT}
+      shadow-camera-right={SHADOW_EXTENT}
+      shadow-camera-top={SHADOW_EXTENT}
+      shadow-camera-bottom={-SHADOW_EXTENT}
+      shadow-camera-near={10}
+      shadow-camera-far={400}
+      shadow-bias={-0.0005}
+    />
   );
 }
 
 function Startup() {
   const world = useWorld();
-  const { spawnPlayer, spawnGround, spawnBlockAt, spawnCamera, spawnItem, equipItem } =
+  const { spawnPlayer, spawnGround, spawnBlockAt, spawnCamera, spawnItem, giveItem, selectItem } =
     useActions(actions);
 
   useEffect(() => {
     const player = spawnPlayer({ position: [0, 10, 0] });
-    const hammer = spawnItem('hammer');
-    equipItem(player, hammer);
+    // Hotbar order: 1 is a block, 2 is the hammer. The first slot starts in hand.
+    const items = [spawnItem('block'), spawnItem('hammer')];
+    items.forEach((item) => giveItem(player, item));
+    selectItem(player, 'block');
     const ground = spawnGround();
     spawnBlockAt(new Vector3(0, 0.5, -5));
     const camera = spawnCamera();
@@ -68,14 +116,15 @@ function Startup() {
     );
 
     return () => {
-      hammer.destroy();
+      items.forEach((item) => item.destroy());
       player.destroy();
       ground.destroy();
+      world.set(Construction, { pending: [], doomed: [], nextPending: 0, nextDoomed: 0, elapsed: 0 });
       Array.from(world.query(Block)).forEach((block) => block.destroy());
       Array.from(world.query(Pig)).forEach((pig) => pig.destroy());
       camera.destroy();
     };
-  }, [equipItem, spawnBlockAt, spawnCamera, spawnGround, spawnItem, spawnPlayer, world]);
+  }, [giveItem, selectItem, spawnBlockAt, spawnCamera, spawnGround, spawnItem, spawnPlayer, world]);
 
   return null;
 }

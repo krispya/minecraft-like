@@ -1,48 +1,43 @@
-import { useTexture } from '@react-three/drei';
-import type { ThreeEvent } from '@react-three/fiber';
+import { type ThreeEvent, useFrame } from '@react-three/fiber';
 import type { Entity } from 'koota';
-import { useActions, useQuery, useTrait } from 'koota/react';
+import { useActions, useWorld } from 'koota/react';
+import { useEffect, useMemo } from 'react';
 import { actions } from '../actions';
-import dirtImg from '../assets/dirt.jpg';
-import { Block, BlockDamage, Position } from '../traits';
+import { Mining, Player } from '../traits';
+import { BlockBatch } from './block-batch';
+import { useBlockTextures } from './block-materials';
+
+type BlockEvent<T> = ThreeEvent<T> & { block?: Entity };
 
 export function BlockRenderer() {
-  const blocks = useQuery(Block, Position);
-  return blocks.map((entity) => <BlockView key={entity.id()} entity={entity} />);
-}
+  const world = useWorld();
+  const textures = useBlockTextures();
+  const batch = useMemo(() => new BlockBatch(textures), [textures]);
+  const { interactWith, stopMining } = useActions(actions);
 
-function BlockView({ entity }: { entity: Entity }) {
-  const { placeBlock, startMining, stopMining } = useActions(actions);
-  const position = useTrait(entity, Position);
-  const damage = useTrait(entity, BlockDamage);
-  const texture = useTexture(dirtImg);
-  // Darkens as the block takes hits.
-  const brightness = damage ? 1 - 0.6 * (damage.hits / damage.hitsToBreak) : 1;
+  useEffect(() => batch.subscribe(world), [batch, world]);
+  useFrame(() => batch.animate(world));
 
-  const handleMine = (event: ThreeEvent<PointerEvent>) => {
-    if (event.button !== 0) return;
+  const handlePointerDown = (event: BlockEvent<PointerEvent>) => {
+    if (event.button !== 0 || !event.block || !event.face) return;
 
     event.stopPropagation();
-    startMining(entity, event.point);
+    interactWith(event.block, { point: event.point, normal: event.face.normal });
   };
 
-  const handlePlace = (event: ThreeEvent<MouseEvent>) => {
-    event.nativeEvent.preventDefault();
-    event.stopPropagation();
-    if (event.face) placeBlock(entity, { point: event.point, normal: event.face.normal });
+  // All blocks are one object to the pointer, so moving onto another block ends the swing loop
+  // the same way leaving a block's own mesh used to.
+  const handleMove = (event: BlockEvent<PointerEvent>) => {
+    const mined = world.queryFirst(Player)?.targetFor(Mining);
+    if (mined !== undefined && mined !== event.block) stopMining();
   };
 
   return (
-    <mesh
-      castShadow
-      receiveShadow
-      position={position?.toArray()}
-      onPointerDown={handleMine}
+    <primitive
+      object={batch.group}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handleMove}
       onPointerLeave={stopMining}
-      onContextMenu={handlePlace}
-    >
-      <boxGeometry />
-      <meshStandardMaterial map={texture} color={[brightness, brightness, brightness]} />
-    </mesh>
+    />
   );
 }
