@@ -22,7 +22,7 @@ export const actions = createActions((world) => ({
       Position(new Vector3(position[0], position[1], position[2])),
       Rotation(new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3])),
       Velocity,
-      BoxCollider({ size: new Vector3(1, 2.8, 1) })
+      BoxCollider({ size: new Vector3(1.03125, 2.046875, 0.5625) })
     );
   },
   spawnGround: () => {
