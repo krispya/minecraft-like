@@ -25,6 +25,7 @@ export const CharacterController = trait({
   friction: 70,
   gravity: -24,
   jumpSpeed: 8,
+  turnSpeed: 10,
 });
 export const BoxCollider = trait({ size: () => new Vector3(1, 1, 1) });
 export const PlaneCollider = trait({ normal: () => new Vector3(0, 1, 0) });
