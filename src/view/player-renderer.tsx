@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { AnimationAction, Box3, MathUtils, Mesh, Vector3 } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import minecraftCharacterUrl from '../assets/minecraft-character/source/model.gltf?url';
-import { IsGrounded, Player, Position, Rotation, Velocity } from '../traits';
+import { BoxCollider, IsGrounded, Player, Position, Rotation, Velocity } from '../traits';
 import { BoxColliderDebug } from './box-collider-debug';
 
 const IDLE_ANIMATION = 'still_test';
@@ -23,10 +23,13 @@ function PlayerView({ entity }: { entity: Entity }) {
   const activeAction = useRef<AnimationAction | null>(null);
   const { scene, animations } = useGLTF(minecraftCharacterUrl);
   const model = useMemo(() => clone(scene), [scene]);
+  const box = useTrait(entity, BoxCollider);
   const modelOffset = useMemo(() => {
-    const center = new Box3().setFromObject(model).getCenter(new Vector3());
-    return center.multiplyScalar(-1).toArray();
-  }, [model]);
+    const bounds = new Box3().setFromObject(model);
+    const center = bounds.getCenter(new Vector3());
+
+    return [-center.x, -bounds.min.y - (box?.size.y ?? 0) / 2, -center.z] as const;
+  }, [box, model]);
   const { actions } = useAnimations(animations, model);
   const position = useTrait(entity, Position);
   const rotation = useTrait(entity, Rotation);

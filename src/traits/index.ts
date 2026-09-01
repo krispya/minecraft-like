@@ -27,6 +27,7 @@ export const CharacterController = trait({
   jumpSpeed: 8,
   turnSpeed: 10,
 });
+// Box colliders remain aligned with the world when an entity rotates.
 export const BoxCollider = trait({ size: () => new Vector3(1, 1, 1) });
 export const PlaneCollider = trait({ normal: () => new Vector3(0, 1, 0) });
 export const IsGrounded = trait();
