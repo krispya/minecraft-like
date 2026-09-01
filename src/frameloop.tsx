@@ -1,7 +1,9 @@
 import type { World } from 'koota';
 import { useEffect } from 'react';
 import { useWorld } from 'koota/react';
+import { actions } from './actions';
 import { applyGravity } from './system/apply-gravity';
+import { applyFirstPerson, updateFirstPersonController } from './system/first-person-controller';
 import { moveEntity } from './system/move-entity';
 import { applyOrbit, moveOrbit, updateOrbitController } from './system/orbit-controller';
 import { resetInputDelta } from './system/reset-input';
@@ -25,6 +27,7 @@ export function Frameloop() {
 
     updatePlayerInput(world);
     updateOrbitController(world);
+    updateFirstPersonController(world);
 
     updateCharacterController(world);
     applyGravity(world);
@@ -36,6 +39,7 @@ export function Frameloop() {
     updateFollowTarget(world);
     moveOrbit(world);
     applyOrbit(world);
+    applyFirstPerson(world);
 
     resetInputDelta(world);
   });
@@ -46,6 +50,7 @@ export function Frameloop() {
 function useKeyboard(world: World) {
   useEffect(() => {
     const keys = world.get(Keys)!;
+    const { toggleCameraPerspective } = actions(world);
 
     const setKey = (key: string, pressed: boolean) => {
       if (pressed) keys.add(key);
@@ -54,7 +59,13 @@ function useKeyboard(world: World) {
       world.set(Keys, keys);
     };
 
-    const handleKeyDown = (event: KeyboardEvent) => setKey(event.key.toLowerCase(), true);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+
+      if (key === 'f' && !keys.has(key)) toggleCameraPerspective();
+
+      setKey(key, true);
+    };
     const handleKeyUp = (event: KeyboardEvent) => setKey(event.key.toLowerCase(), false);
 
     window.addEventListener('keydown', handleKeyDown);

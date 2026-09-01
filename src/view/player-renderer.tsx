@@ -1,14 +1,17 @@
 import { useAnimations, useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { Entity } from 'koota';
-import { useQuery, useTag, useTrait } from 'koota/react';
+import { useQuery, useQueryFirst, useTag, useTrait } from 'koota/react';
 import { useEffect, useMemo, useRef } from 'react';
 import { AnimationAction, AnimationClip, Box3, Mesh, Object3D, Vector3 } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import minecraftCharacterUrl from '../assets/minecraft-character/source/model.gltf?url';
 import {
   BoxCollider,
+  Camera,
+  Follows,
   IsAirborne,
+  IsFirstPerson,
   IsIdle,
   IsWalking,
   Player,
@@ -37,6 +40,7 @@ function PlayerView({ entity }: { entity: Entity }) {
 
   const position = useTrait(entity, Position);
   const rotation = useTrait(entity, Rotation);
+  const isFirstPerson = useQueryFirst(Camera, IsFirstPerson, Follows(entity)) !== undefined;
 
   useCharacterAnimation(entity, animations, model);
 
@@ -51,10 +55,14 @@ function PlayerView({ entity }: { entity: Entity }) {
 
   return (
     <>
-      <group position={position?.toArray()} quaternion={rotation?.toArray()}>
-        <primitive object={model} position={modelOffset} />
-      </group>
-      <BoxColliderDebug entity={entity} />
+      {!isFirstPerson && (
+        <>
+          <group position={position?.toArray()} quaternion={rotation?.toArray()}>
+            <primitive object={model} position={modelOffset} />
+          </group>
+          <BoxColliderDebug entity={entity} />
+        </>
+      )}
     </>
   );
 }

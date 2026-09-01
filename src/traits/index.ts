@@ -42,6 +42,15 @@ export const Sky = trait();
 
 export const Camera = trait();
 export const Follows = relation({ exclusive: true });
+export const IsFirstPerson = trait();
+export const IsThirdPerson = trait();
+
+export const FirstPersonController = trait({
+  offset: () => new Vector3(0, 0.75, 0),
+  yaw: 0,
+  pitch: 0,
+  rotateSpeed: 1,
+});
 
 export const OrbitController = trait({
   // Offset from the target.

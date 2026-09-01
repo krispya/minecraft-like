@@ -4,7 +4,7 @@ import { useActions, useTrait, useWorld } from 'koota/react';
 import { useEffect } from 'react';
 import { actions } from './actions';
 import { Frameloop } from './frameloop';
-import { Follows, Keys, OrbitController, Time } from './traits';
+import { FirstPersonController, Follows, IsThirdPerson, Keys, OrbitController, Time } from './traits';
 
 import { CameraRenderer } from './view/camera-renderer';
 import { GroundRenderer } from './view/ground-renderer';
@@ -39,7 +39,12 @@ function Startup() {
     const player = spawnPlayer({ position: [0, 10, 0] });
     const ground = spawnGround();
     const camera = spawnCamera();
-    camera.add(OrbitController({ damping: 8 }), Follows(player));
+    camera.add(
+      OrbitController({ damping: 8 }),
+      FirstPersonController,
+      IsThirdPerson,
+      Follows(player)
+    );
 
     return () => {
       player.destroy();

@@ -1,8 +1,11 @@
 import type { World } from 'koota';
 import { Quaternion, Vector3 } from 'three';
 import {
+  Camera,
   CharacterController,
+  Follows,
   Input,
+  IsFirstPerson,
   IsGrounded,
   Position,
   Rotation,
@@ -28,8 +31,10 @@ export function updateCharacterController(world: World) {
       let isGrounded = entity.has(IsGrounded);
       const rate = hasInput ? controller.acceleration : isGrounded ? controller.friction : 0;
       const maxChange = rate * delta;
+      const usesFirstPersonCamera =
+        world.queryFirst(Camera, IsFirstPerson, Follows(entity)) !== undefined;
 
-      if (hasInput) {
+      if (hasInput && !usesFirstPersonCamera) {
         const targetYaw = Math.atan2(-input.x, input.y);
         targetRotation.setFromAxisAngle(UP, targetYaw);
         const turnAlpha = 1 - Math.exp(-controller.turnSpeed * delta);
