@@ -1,4 +1,4 @@
-import { createActions } from 'koota';
+import { createActions, type Entity, type TagTrait } from 'koota';
 import { Quaternion, Vector3 } from 'three';
 import {
   BoxCollider,
@@ -6,6 +6,9 @@ import {
   CharacterController,
   Ground,
   Input,
+  IsAirborne,
+  IsIdle,
+  IsWalking,
   PlaneCollider,
   Player,
   Position,
@@ -18,12 +21,19 @@ export const actions = createActions((world) => ({
     return world.spawn(
       Player,
       CharacterController,
+      IsIdle,
       Input,
       Position(new Vector3(position[0], position[1], position[2])),
       Rotation(new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3])),
       Velocity,
       BoxCollider({ size: new Vector3(0.6, 2, 0.6) })
     );
+  },
+  transitionCharacter: (entity: Entity, state: TagTrait) => {
+    if (entity.has(state)) return;
+
+    entity.remove(IsIdle, IsWalking, IsAirborne);
+    entity.add(state);
   },
   spawnGround: () => {
     return world.spawn(Ground, PlaneCollider, Position);

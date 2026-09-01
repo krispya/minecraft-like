@@ -7,6 +7,7 @@ import { applyOrbit, moveOrbit, updateOrbitController } from './system/orbit-con
 import { resetInputDelta } from './system/reset-input';
 import { resolveBoxPlaneCollisions } from './system/resolve-box-plane-collisions';
 import { updateCharacterController } from './system/update-character-controller';
+import { updateCharacterState } from './system/update-character-state';
 import { updateFollowTarget } from './system/update-follow-target';
 import { updatePlayerInput } from './system/update-player-input';
 import { updateTime } from './system/update-time';
@@ -30,6 +31,7 @@ export function Frameloop() {
 
     moveEntity(world);
     resolveBoxPlaneCollisions(world);
+    updateCharacterState(world);
 
     updateFollowTarget(world);
     moveOrbit(world);
