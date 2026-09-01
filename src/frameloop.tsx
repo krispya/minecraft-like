@@ -16,6 +16,7 @@ import { updateCharacterState } from './system/update-character-state';
 import { updateFollowTarget } from './system/update-follow-target';
 import { updatePlayerInput } from './system/update-player-input';
 import { updateTime } from './system/update-time';
+import { subscribeToolSwing, updateToolSwing } from './system/tool-swing';
 import { useAnimationFrame } from './utils/use-animation-frame';
 
 export function Frameloop() {
@@ -25,9 +26,11 @@ export function Frameloop() {
   useWheel(world);
 
   useEffect(() => subscribeCameraControllerSwap(world), [world]);
+  useEffect(() => subscribeToolSwing(world), [world]);
 
   useAnimationFrame(() => {
     updateTime(world);
+    updateToolSwing(world);
 
     updatePlayerInput(world);
     updateOrbitController(world);

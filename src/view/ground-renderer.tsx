@@ -19,7 +19,8 @@ function GroundView({ entity }: { entity: Entity }) {
   texture.wrapS = texture.wrapT = RepeatWrapping;
   const position = useTrait(entity, Position);
 
-  const handleClick = (event: ThreeEvent<MouseEvent>) => {
+  const handlePlace = (event: ThreeEvent<MouseEvent>) => {
+    event.nativeEvent.preventDefault();
     event.stopPropagation();
     if (event.face) placeBlock(entity, { point: event.point, normal: event.face.normal });
   };
@@ -29,7 +30,7 @@ function GroundView({ entity }: { entity: Entity }) {
       receiveShadow
       position={position?.toArray()}
       rotation-x={-Math.PI / 2}
-      onClick={handleClick}
+      onContextMenu={handlePlace}
     >
       <planeGeometry args={[1000, 1000]} />
       <meshStandardMaterial map={texture} map-repeat={[240, 240]} color="green" />

@@ -2,6 +2,8 @@ import { createActions, type Entity, type TagTrait } from 'koota';
 import { Quaternion, Vector3 } from 'three';
 import {
   Block,
+  BlockDamage,
+  BlockInteraction,
   BoxCollider,
   Camera,
   CharacterController,
@@ -12,14 +14,50 @@ import {
   IsIdle,
   IsThirdPerson,
   IsWalking,
+  Mining,
   PlaneCollider,
   Player,
   Position,
   Rotation,
+  ToolSwing,
   Velocity,
 } from './traits';
 
 export const actions = createActions((world) => {
+  const isWithinReach = (point: Vector3) => {
+    const player = world.queryFirst(Player, BlockInteraction, Position);
+    if (!player) return false;
+
+    const { range, eyeHeight } = player.get(BlockInteraction)!;
+    const eye = player.get(Position)!.clone();
+    eye.y += eyeHeight;
+
+    return point.distanceTo(eye) <= range;
+  };
+
+  const swingTool = () => {
+    const player = world.queryFirst(Player);
+    const swing = player?.get(ToolSwing);
+    // Like Minecraft, a swing in progress only restarts once it is past halfway.
+    if (!player || (swing && swing.elapsed < swing.duration / 2)) return;
+
+    // Re-adding restarts the swing and notifies onAdd subscribers.
+    player.remove(ToolSwing);
+    player.add(ToolSwing);
+  };
+
+  // Returns whether the hit landed.
+  const mineBlock = (block: Entity, point: Vector3) => {
+    const damage = block.get(BlockDamage);
+    if (!damage || !isWithinReach(point)) return false;
+
+    const hits = damage.hits + 1;
+    if (hits >= damage.hitsToBreak) block.destroy();
+    else block.set(BlockDamage, { ...damage, hits });
+
+    return true;
+  };
+
   const spawnBlockAt = (position: Vector3) => {
     const snappedPosition = position
       .clone()
@@ -42,7 +80,7 @@ export const actions = createActions((world) => {
     });
     if (intersectsPlayer) return;
 
-    return world.spawn(Block, Position(snappedPosition), BoxCollider);
+    return world.spawn(Block, BlockDamage, Position(snappedPosition), BoxCollider);
   };
 
   return {
@@ -50,6 +88,7 @@ export const actions = createActions((world) => {
       return world.spawn(
         Player,
         CharacterController,
+        BlockInteraction,
         IsIdle,
         Input,
         Position(new Vector3(position[0], position[1], position[2])),
@@ -75,8 +114,27 @@ export const actions = createActions((world) => {
     spawnGround: () => {
       return world.spawn(Ground, PlaneCollider, Position);
     },
+    swingTool,
     spawnBlockAt,
+    mineBlock,
+    // Lands the first hit right away. The swing loop keeps hitting while the button is held.
+    startMining: (block: Entity, point: Vector3) => {
+      const player = world.queryFirst(Player);
+      if (!player || !mineBlock(block, point) || !world.has(block)) return;
+
+      player.add(Mining(block));
+    },
+    stopMining: () => {
+      world.query(Mining('*')).forEach((player) => {
+        const block = player.targetFor(Mining);
+        if (block) player.remove(Mining(block));
+      });
+    },
     placeBlock: (surface: Entity, hit: { point: Vector3; normal: Vector3 }) => {
+      if (!isWithinReach(hit.point)) return;
+
+      let position: Vector3;
+
       if (surface.has(Block)) {
         const surfacePosition = surface.get(Position);
         if (!surfacePosition || hit.normal.lengthSq() === 0) return;
@@ -90,13 +148,19 @@ export const actions = createActions((world) => {
         else if (y >= z) offset.y = Math.sign(hit.normal.y);
         else offset.z = Math.sign(hit.normal.z);
 
-        return spawnBlockAt(surfacePosition.clone().add(offset));
+        position = surfacePosition.clone().add(offset);
+      } else {
+        const plane = surface.get(PlaneCollider);
+        if (!plane || plane.normal.lengthSq() === 0) return;
+
+        position = hit.point.clone().addScaledVector(plane.normal.clone().normalize(), 0.5);
       }
 
-      const plane = surface.get(PlaneCollider);
-      if (!plane || plane.normal.lengthSq() === 0) return;
+      const block = spawnBlockAt(position);
+      // Placing swings the hand, like Minecraft's use animation.
+      if (block) swingTool();
 
-      return spawnBlockAt(hit.point.clone().addScaledVector(plane.normal.clone().normalize(), 0.5));
+      return block;
     },
     spawnCamera: ({ position = [0, 0, 0], rotation = [0, 0, 0, 1] } = {}) => {
       return world.spawn(

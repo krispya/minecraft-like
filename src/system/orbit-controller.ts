@@ -18,7 +18,7 @@ export function updateOrbitController(world: World) {
       const { velocity, rotateSpeed, zoomSpeed, damping } = controller;
 
       // Damping-scaled impulses preserve travel while changing coast time.
-      if (pointer.isDown) {
+      if (pointer.buttons !== 0) {
         velocity.theta -= pointer.delta.x * NDC_TO_RADIANS * rotateSpeed * damping;
         velocity.phi += pointer.delta.y * NDC_TO_RADIANS * rotateSpeed * damping;
       }

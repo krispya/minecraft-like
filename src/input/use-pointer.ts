@@ -7,11 +7,11 @@ export function usePointer(world: World) {
     const toNdcX = (event: PointerEvent) => (event.clientX / window.innerWidth) * 2 - 1;
     const toNdcY = (event: PointerEvent) => -(event.clientY / window.innerHeight) * 2 + 1;
 
-    const handlePointerDown = (event: PointerEvent) => {
+    const handlePointerButtons = (event: PointerEvent) => {
       const pointer = world.get(Pointer)!;
-      // Prevent a jump on the first move.
+      // Prevent a jump on the next move.
       pointer.position.set(toNdcX(event), toNdcY(event));
-      pointer.isDown = true;
+      pointer.buttons = event.buttons;
 
       world.set(Pointer, pointer);
     };
@@ -29,24 +29,16 @@ export function usePointer(world: World) {
       world.set(Pointer, pointer);
     };
 
-    const handlePointerUp = (event: PointerEvent) => {
-      const pointer = world.get(Pointer)!;
-      // buttons excludes the released button.
-      pointer.isDown = event.buttons !== 0;
-
-      world.set(Pointer, pointer);
-    };
-
-    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('pointerdown', handlePointerButtons);
     window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', handlePointerUp);
-    window.addEventListener('pointercancel', handlePointerUp);
+    window.addEventListener('pointerup', handlePointerButtons);
+    window.addEventListener('pointercancel', handlePointerButtons);
 
     return () => {
-      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('pointerdown', handlePointerButtons);
       window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
-      window.removeEventListener('pointercancel', handlePointerUp);
+      window.removeEventListener('pointerup', handlePointerButtons);
+      window.removeEventListener('pointercancel', handlePointerButtons);
     };
   }, [world]);
 }

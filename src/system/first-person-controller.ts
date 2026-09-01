@@ -19,7 +19,7 @@ export function updateFirstPersonController(world: World) {
     .query(Camera, IsFirstPerson, FirstPersonController)
     .select(FirstPersonController)
     .updateEach(([controller], entity) => {
-      if (!pointer.isDown) return;
+      if (pointer.buttons === 0) return;
 
       controller.yaw -= pointer.delta.x * Math.PI * controller.rotateSpeed;
       controller.pitch = MathUtils.clamp(

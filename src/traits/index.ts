@@ -9,7 +9,8 @@ export const Pointer = trait({
   position: () => new Vector2(),
   // Accumulated since the last frame.
   delta: () => new Vector2(),
-  isDown: false,
+  // Held buttons bitmask, like MouseEvent.buttons.
+  buttons: 0,
 });
 // Positive when scrolling down.
 export const Wheel = trait({ delta: 0 });
@@ -27,9 +28,12 @@ export const CharacterController = trait({
   jumpSpeed: 8,
   turnSpeed: 10,
 });
+export const BlockInteraction = trait({ range: 4.5, eyeHeight: 0.75 });
 export const IsIdle = trait();
 export const IsWalking = trait();
 export const IsAirborne = trait();
+// Six Minecraft ticks.
+export const ToolSwing = trait({ elapsed: 0, duration: 0.3 });
 // Box colliders remain aligned with the world when an entity rotates.
 export const BoxCollider = trait({ size: () => new Vector3(1, 1, 1) });
 export const PlaneCollider = trait({ normal: () => new Vector3(0, 1, 0) });
@@ -39,6 +43,9 @@ export const DynamicBody = trait({ mass: 1 });
 export const Player = trait();
 export const Ground = trait();
 export const Block = trait();
+export const BlockDamage = trait({ hits: 0, hitsToBreak: 3 });
+// The block the player is holding the mouse button on.
+export const Mining = relation({ exclusive: true });
 export const Sky = trait();
 
 export const Camera = trait();
