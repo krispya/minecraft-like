@@ -39,3 +39,7 @@ This project uses data-oriented design with Koota as the core engine. React is a
 ## Comments
 
 Comments should be concise and relavant to explaining the algorithm or feature. It should not explain changes or a history of the codebase. Comments should serve as documentation. Use simple punctuation. Do not use semicolons or em dashes, for example.
+
+# Const Policy
+
+We want reduce top level const and inline anything that is an explicit hook we need tweak often. Always ask yourself if a const needs to exist before making it. Prefer to inline.
