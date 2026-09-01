@@ -1,11 +1,20 @@
-import type { World } from 'koota';
+import { Not, type World } from 'koota';
 import { actions } from '../actions';
-import { CharacterController, IsAirborne, IsGrounded, IsIdle, IsWalking, Velocity } from '../traits';
+import {
+  CharacterController,
+  IsAirborne,
+  IsGrounded,
+  IsIdle,
+  IsRiding,
+  IsWalking,
+  Velocity,
+} from '../traits';
 
 export function updateCharacterState(world: World) {
   const { transitionCharacter } = actions(world);
 
-  world.query(CharacterController, Velocity).readEach(([, velocity], entity) => {
+  // Riders leave this state machine until they dismount.
+  world.query(CharacterController, Velocity, Not(IsRiding)).readEach(([, velocity], entity) => {
     if (!entity.has(IsGrounded)) {
       transitionCharacter(entity, IsAirborne);
       return;

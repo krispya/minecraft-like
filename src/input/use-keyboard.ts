@@ -6,7 +6,7 @@ import { Keys } from '../traits';
 export function useKeyboard(world: World) {
   useEffect(() => {
     const keys = world.get(Keys)!;
-    const { toggleCameraPerspective, spawnPigNearPlayer, toggleMount } = actions(world);
+    const { toggleCameraPerspective, spawnPigNearPlayer, requestMountToggle } = actions(world);
 
     const setKey = (key: string, pressed: boolean) => {
       if (pressed) keys.add(key);
@@ -20,7 +20,7 @@ export function useKeyboard(world: World) {
 
       if (key === 'f' && !keys.has(key)) toggleCameraPerspective();
       if (key === 'r' && !keys.has(key)) spawnPigNearPlayer();
-      if (key === 'e' && !keys.has(key)) toggleMount();
+      if (key === 'e' && !keys.has(key)) requestMountToggle();
 
       setKey(key, true);
     };

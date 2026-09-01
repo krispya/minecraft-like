@@ -14,7 +14,8 @@ export const Pointer = trait({
 });
 // Positive when scrolling down.
 export const Wheel = trait({ delta: 0 });
-export const Input = trait({ x: 0, y: 0, jump: false });
+// `mount` asks to climb on or off and is cleared by the tick that handles it.
+export const Input = trait({ x: 0, y: 0, jump: false, mount: false });
 
 export const Position = trait(() => new Vector3());
 export const Rotation = trait(() => new Quaternion());
@@ -29,9 +30,12 @@ export const CharacterController = trait({
   turnSpeed: 10,
 });
 export const BlockInteraction = trait({ range: 4.5, eyeHeight: 0.75 });
+// Character states, exclusive: see transitionCharacter.
 export const IsIdle = trait();
 export const IsWalking = trait();
 export const IsAirborne = trait();
+// Riders keep their collider but sit out of physics while mounted.
+export const IsRiding = trait();
 // Six Minecraft ticks.
 export const ToolSwing = trait({ elapsed: 0, duration: 0.3 });
 // Box colliders remain aligned with the world when an entity rotates.
@@ -101,5 +105,3 @@ export const Wander = trait({
 // Forward is -z, so a positive z sits the rider further back.
 export const Rideable = trait({ seat: () => new Vector3(0, 0.75, 0.3) });
 export const Rides = relation({ exclusive: true });
-// Riders keep their collider but sit out of physics while mounted.
-export const IsRiding = trait();

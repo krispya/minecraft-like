@@ -134,10 +134,18 @@ export const actions = createActions((world) => {
     });
   };
 
+  const transitionCharacter = (entity: Entity, state: TagTrait) => {
+    if (entity.has(state)) return;
+
+    entity.remove(IsIdle, IsWalking, IsAirborne, IsRiding);
+    entity.add(state);
+  };
+
   const mount = (rider: Entity, target: Entity) => {
     // Without Velocity the rider drops out of every physics system.
     rider.remove(Velocity, IsGrounded);
-    rider.add(Rides(target), IsRiding);
+    rider.add(Rides(target));
+    transitionCharacter(rider, IsRiding);
   };
 
   const dismount = (rider: Entity) => {
@@ -157,8 +165,18 @@ export const actions = createActions((world) => {
     const velocity = target.get(Velocity)?.clone() ?? new Vector3();
     velocity.y = rider.get(CharacterController)?.jumpSpeed ?? 0;
 
-    rider.remove(Rides(target), IsRiding);
+    rider.remove(Rides(target));
     rider.add(Velocity(velocity));
+    transitionCharacter(rider, IsAirborne);
+  };
+
+  // Mounting moves the rider, so input only asks for it here and the tick carries it out. That
+  // way the camera follows in the same frame instead of one frame after the model.
+  const requestMountToggle = () => {
+    const player = world.queryFirst(Player, Input);
+    if (!player) return;
+
+    player.set(Input, { mount: true });
   };
 
   const toggleMount = () => {
@@ -204,13 +222,9 @@ export const actions = createActions((world) => {
     },
     spawnPig,
     spawnPigNearPlayer,
+    requestMountToggle,
     toggleMount,
-    transitionCharacter: (entity: Entity, state: TagTrait) => {
-      if (entity.has(state)) return;
-
-      entity.remove(IsIdle, IsWalking, IsAirborne);
-      entity.add(state);
-    },
+    transitionCharacter,
     toggleCameraPerspective: () => {
       world.query(Camera).forEach((camera) => {
         const perspective = camera.has(IsFirstPerson) ? IsThirdPerson : IsFirstPerson;
