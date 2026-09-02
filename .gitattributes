@@ -4,9 +4,9 @@
 *.jpeg binary
 *.gif binary
 *.ico binary
-*.mov binary
+*.mov filter=lfs diff=lfs merge=lfs -text
 *.mp4 filter=lfs diff=lfs merge=lfs -text
-*.mp3 binary
+*.mp3 filter=lfs diff=lfs merge=lfs -text
 *.flv binary
 *.fla binary
 *.wav binary

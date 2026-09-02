@@ -17,6 +17,9 @@ importers:
       '@remotion/cli':
         specifier: ^4.0.520
         version: 4.0.520(postcss@8.5.26)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2)
+      '@remotion/fonts':
+        specifier: 4.0.520
+        version: 4.0.520(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@remotion/google-fonts':
         specifier: ^4.0.520
         version: 4.0.520(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -411,6 +414,9 @@ packages:
     resolution: {integrity: sha512-kQyBCQgxJeZbcI0zfE/vgQHz0JaAx3mGTJCj0Ta9207enFHF/0hNZ0+jNxrYg74bo2kTRIoyWbNaOqXI5G332Q==}
     cpu: [x64]
     os: [win32]
+
+  '@remotion/fonts@4.0.520':
+    resolution: {integrity: sha512-0MwKPt5Oreqw5aPApXxCQVSx/EJYlNM//6uw1wZkF2Zm/c8xjP8P3Gi/dgk/I4ahRYPmT5pqP+QWArMD1hsVRw==}
 
   '@remotion/google-fonts@4.0.520':
     resolution: {integrity: sha512-IsvJNtTk617//pI9RxzMxSidLIrVY8r8uv7SLGX+PCOZNb5WR02mBjGURvlHuGPzMFXV2sosKNwAtXzeBmN7fw==}
@@ -1863,6 +1869,13 @@ snapshots:
 
   '@remotion/compositor-win32-x64-msvc@4.0.520':
     optional: true
+
+  '@remotion/fonts@4.0.520(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+    dependencies:
+      remotion: 4.0.520(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+    transitivePeerDependencies:
+      - react
+      - react-dom
 
   '@remotion/google-fonts@4.0.520(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:

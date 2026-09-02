@@ -4,14 +4,14 @@
 // envelope, autocorrelation of that envelope picks the tempo, and a comb filter
 // picks the phase. Scene cuts come from ffmpeg scene detection.
 //
-// Usage: node scripts/analyze.mjs ../track_promo.mp4
+// Usage: node scripts/analyze.mjs media/another_mix_ig.mp3
 
 import { execFileSync, spawnSync } from 'node:child_process';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const input = resolve(process.argv[2] ?? '../track_promo.mp4');
+const input = resolve(process.argv[2] ?? 'media/another_mix_ig.mp3');
 const output = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'beats.json');
 
 // Analysis rate. 22050 / 256 gives about 86 onset samples per second which
