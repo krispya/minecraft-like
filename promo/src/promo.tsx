@@ -14,23 +14,18 @@ import { cues, footage, song } from './cues';
 import { CueView } from './components/cue-views';
 import { CutFlash, EdgeScrims, Grain, Vignette } from './components/chrome';
 
-// Crops the 2048x1556 source to 16:9, which lands close to the black bars
-// already baked into most shots. Cues are authored against a 1920 wide design
-// frame and scaled to the delivery.
+// Source footage is cropped to 16:9. Cue layouts use a 1920 px design frame.
 export function Promo() {
   const { fps, width, durationInFrames } = useVideoConfig();
 
-  // 1.03 base crops past the letterbox baked into the source, then every
-  // downbeat pushes in a little further. Kept under 2% because past that it
-  // stops reading as emphasis and starts reading as a zoom.
+  // Clears baked letterboxing and adds a beat-synchronized push.
   const punch = 1.03 + 0.018 * useBeatPulse(4, 4);
 
   return (
     <AbsoluteFill style={{ background: brand.dark900 }}>
       <AbsoluteFill style={{ overflow: 'hidden' }}>
         {footage.map(({ at, shots, src = 'track_promo.mp4', rate = 1, fade = 0 }) => {
-          // Shots chain in frames rather than beats so rounding never opens a
-          // one frame hole between two of them
+          // Chain shots in frames to avoid gaps from beat rounding.
           let from = beatsToFrames(at, fps);
           return shots.map(([start, end], index) => {
             const duration = Math.round(((end - start) / rate) * fps);
@@ -70,7 +65,6 @@ export function Promo() {
 
       <Grain />
       <Fade />
-      {/* The song fades over the same beats as the picture */}
       <Audio
         src={staticFile(song.file)}
         startFrom={Math.round(songStart * fps)}
@@ -87,9 +81,7 @@ export function Promo() {
   );
 }
 
-// One shot of the source. `rate` is playback speed, and `fade` is how many
-// frames before its end it goes to the ground, for a playlist that hands over
-// to a card rather than a cut.
+// `fade` is the number of frames used to fade the shot to the background.
 function Shot({
   src,
   start,
@@ -131,9 +123,7 @@ function Shot({
   );
 }
 
-// Out over the song's fade so picture and audio land together. No fade in,
-// because the first frame is the thumbnail on X and it should be the game,
-// not black.
+// Fades the picture during the final `song.fadeOut` beats.
 function Fade() {
   const { durationInFrames, fps } = useVideoConfig();
   const frame = useCurrentFrame();

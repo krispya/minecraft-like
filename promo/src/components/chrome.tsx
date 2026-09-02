@@ -1,11 +1,7 @@
-// Frame furniture that runs for the whole piece. None of it carries meaning on
-// its own, it exists so the cuts and the cues sit inside something deliberate.
-
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion';
 import { cutBeats, useBeatPosition } from '../beat';
 
-// Two frame lift on every detected cut. Small enough to feel like exposure
-// rather than a transition.
+// Flashes at footage cuts and card boundaries.
 export function CutFlash() {
   const position = useBeatPosition();
   const nearest = cutBeats.reduce(
@@ -26,9 +22,7 @@ export function CutFlash() {
   );
 }
 
-// The 16:9 crop clips the source UI along the top edge on the configurator
-// shots, and the lower third needs a base to sit on. One gradient at each edge
-// solves both and reads as intent rather than repair.
+// Darkens the top and bottom edges for UI and lower-third contrast.
 export function EdgeScrims() {
   return (
     <>
@@ -66,8 +60,7 @@ export function Vignette() {
   );
 }
 
-// Reseeded every other frame. Every frame crawls too fast to read as film and
-// costs more to rasterise for no visible gain.
+// Reuses each noise seed for two frames to limit crawl and render cost.
 export function Grain() {
   const seed = Math.floor(useCurrentFrame() / 2);
   return (

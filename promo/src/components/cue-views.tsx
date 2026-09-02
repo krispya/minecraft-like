@@ -1,7 +1,3 @@
-// The cue treatments. Each one is rendered inside a Sequence that starts
-// on its beat, so useCurrentFrame is already relative to the cue and a spring
-// seeded at frame 0 lands its attack exactly on the beat.
-
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 import { LogoFull } from '@pmndrs/branding';
 import { beatsToFrames } from '../beat';
@@ -10,15 +6,13 @@ import { geist, geistMono } from '../fonts';
 import { measureText } from '@remotion/layout-utils';
 import type { Cue } from '../cues';
 
-// One family for everything. Titles take the black weight so the poster
-// measure still carries at size, lower thirds and cards sit at bold.
+// Cue components render inside a Sequence, so their current frame starts at zero.
 const display = geist;
 const displayWeight = 900;
 const displayTracking = '-0.03em';
 const sans = geist;
 const mono = geistMono;
 
-// Snappy with a touch of overshoot. Slower than this and the hit reads late.
 function useEntry(delayInBeats = 0) {
   const { fps } = useVideoConfig();
   return spring({
@@ -28,8 +22,7 @@ function useEntry(delayInBeats = 0) {
   });
 }
 
-// Cues cut in hard on the beat and release softly, which keeps the attack sharp
-// while stopping the text from popping out mid shot.
+// Fades a cue during its final half beat.
 function useRelease(hold: number) {
   const { fps } = useVideoConfig();
   const end = beatsToFrames(hold, fps);
@@ -39,9 +32,7 @@ function useRelease(hold: number) {
   });
 }
 
-// Poster measure. Every line is set to whatever size makes it fill the same
-// width, so a short line becomes a tall one and the stack reads as one block.
-// That uniform measure is what separates a poster title from centred type.
+// Scales each line to a shared width for a poster-style text block.
 function Title({ text, hold, stagger = 0.5 }: Extract<Cue, { kind: 'title' }>) {
   const entry = useEntry();
   const release = useRelease(hold);
@@ -58,8 +49,6 @@ function Title({ text, hold, stagger = 0.5 }: Extract<Cue, { kind: 'title' }>) {
         opacity: release,
       }}
     >
-      {/* Local scrim so the type survives the light configurator shots as
-          well as the dark ones without needing per cue colour choices */}
       <div
         style={{
           position: 'absolute',
@@ -75,9 +64,6 @@ function Title({ text, hold, stagger = 0.5 }: Extract<Cue, { kind: 'title' }>) {
   );
 }
 
-// Each line rides up out of a clipped box. The line box keeps its full height
-// so nothing crops the tops of the caps, and the stack is pulled tight with a
-// negative margin instead of a short leading.
 function Line({ text, delay }: { text: string; delay: number }) {
   const entry = useEntry(delay);
   const natural = measureText({
@@ -87,12 +73,9 @@ function Line({ text, delay }: { text: string; delay: number }) {
     fontWeight: displayWeight,
     letterSpacing: displayTracking,
   });
-  // 1150 is the measure every line fills. Capped because a very short line like
-  // a year would otherwise have to become enormous to fill the same width.
+  // Fit the line to a 1150 px measure and cap very short lines.
   const size = Math.min((100 * 1150) / natural.width, 250);
-  // The wipe clips to this box, so it needs padding wide enough to hold the
-  // text shadow, otherwise the shadow gets sliced off square at the edges.
-  // Negative margins cancel the padding so the stack lands where it did.
+  // Prevent the wipe mask from clipping the text shadow.
   const bleed = 48;
   return (
     <span
@@ -114,7 +97,6 @@ function Line({ text, delay }: { text: string; delay: number }) {
           whiteSpace: 'nowrap',
           color: brand.light25,
           textShadow: '0 4px 28px rgba(0,0,0,0.4)',
-          // Far enough to clear the padded box, not just its own height
           transform: `translateY(${(1 - entry) * 145}%)`,
         }}
       >
@@ -124,12 +106,7 @@ function Line({ text, delay }: { text: string; delay: number }) {
   );
 }
 
-// Chapter card. One line on the dark ground, centred, an optional line under
-// it, and nothing moves. It cuts in on its beat and cuts out on its last one,
-// and the footage on either side is what makes it land. With a `lead` the card
-// becomes two lines in the same size and weight that spring in `stagger` beats
-// apart, the lead first. The plate overshoots the design frame so the card
-// covers the whole delivery.
+// A lead creates two staggered lines. The oversized plate covers scaled deliveries.
 function Card({ text, lead, sub, stagger = 0 }: Extract<Cue, { kind: 'card' }>) {
   return (
     <div
@@ -164,8 +141,6 @@ function Card({ text, lead, sub, stagger = 0 }: Extract<Cue, { kind: 'card' }>) 
   );
 }
 
-// A card line. Given a delay it rises into place on the entry spring, otherwise
-// it is simply there.
 function CardLine({
   text,
   size,
@@ -196,26 +171,24 @@ function CardLine({
   );
 }
 
-// Two columns of items, each landing on its own half beat down the left column
-// and then the right, under a scrim heavy enough that the footage behind reads
-// as texture rather than subject.
+// Fills the left column before the right and staggers items by `every` beats.
 function List({ items, every = 0.5, hold }: Extract<Cue, { kind: 'list' }>) {
-  const scrim = useEntry();
   const release = useRelease(hold);
   return (
-    <div style={{ position: 'absolute', inset: 0, opacity: release }}>
+    <div style={{ position: 'absolute', inset: 0 }}>
+      {/* The plate stays at full through the cut. Only the items release. */}
       <div
         style={{
           position: 'absolute',
           inset: -2000,
           background: 'rgba(0,0,0,0.72)',
-          opacity: scrim,
         }}
       />
       <div
         style={{
           position: 'absolute',
           inset: 0,
+          opacity: release,
           padding: '0 140px',
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
@@ -264,7 +237,6 @@ function ListItem({ text, delay }: { text: string; delay: number }) {
   );
 }
 
-// The end card caption, centred under the wordmark
 function Sub({ text, delay }: { text: string; delay: number }) {
   const entry = useEntry(delay);
   return (
@@ -284,8 +256,6 @@ function Sub({ text, delay }: { text: string; delay: number }) {
   );
 }
 
-// Lower third. The kicker is optional now that a card names the chapter, and
-// without it the rule still wipes out under the label from the left.
 function LowerThird({ kicker, text, hold }: Extract<Cue, { kind: 'lower' }>) {
   const entry = useEntry();
   const release = useRelease(hold);
@@ -314,7 +284,6 @@ function LowerThird({ kicker, text, hold }: Extract<Cue, { kind: 'lower' }>) {
           {kicker}
         </span>
       ) : null}
-      {/* The rule wipes out from the kicker and the label rides behind it */}
       <div style={{ overflow: 'hidden', paddingBottom: 8 }}>
         <span
           style={{
@@ -337,8 +306,7 @@ function LowerThird({ kicker, text, hold }: Extract<Cue, { kind: 'lower' }>) {
           left: 0,
           bottom: -18,
           height: 3,
-          // Spans the kicker and label rather than a fixed length, so the rule
-          // still fits when the copy changes
+          // Tracks the combined kicker and label width.
           width: `${100 * entry}%`,
           background: brand.teal,
         }}
@@ -350,8 +318,7 @@ function LowerThird({ kicker, text, hold }: Extract<Cue, { kind: 'lower' }>) {
 function Stamp({ text, hold }: Extract<Cue, { kind: 'stamp' }>) {
   const frame = useCurrentFrame();
   const release = useRelease(hold);
-  // No easing at all. A hard on/off with a one frame flicker reads as a cut
-  // rather than an animation, which is what makes it feel locked to the drum.
+  // Hide frame 2 to create a one-frame flicker.
   const visible = frame >= 0 && frame !== 2;
   return (
     <span
@@ -364,7 +331,6 @@ function Stamp({ text, hold }: Extract<Cue, { kind: 'stamp' }>) {
         fontSize: 30,
         letterSpacing: '0.08em',
         color: brand.light25,
-        // Carries its own legibility now that there is no plate behind it
         textShadow: '0 2px 20px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.7)',
         opacity: release,
       }}
@@ -374,8 +340,6 @@ function Stamp({ text, hold }: Extract<Cue, { kind: 'stamp' }>) {
   );
 }
 
-// End bumper. The official wordmark from @pmndrs/branding rather than type set
-// by hand, so it stays correct if the brand mark ever changes.
 function Bumper({ url, hold }: Extract<Cue, { kind: 'bumper' }>) {
   const entry = useEntry();
   const release = useRelease(hold);
@@ -391,7 +355,6 @@ function Bumper({ url, hold }: Extract<Cue, { kind: 'bumper' }>) {
         opacity: release,
       }}
     >
-      {/* Overshoots the design frame so the end card dims the whole delivery */}
       <div
         style={{
           position: 'absolute',
@@ -409,7 +372,6 @@ function Bumper({ url, hold }: Extract<Cue, { kind: 'bumper' }>) {
           transform: `scale(${interpolate(entry, [0, 1], [1.1, 1])})`,
         }}
       />
-      {/* The call to action lands a beat after the mark rather than with it */}
       <Sub text={url} delay={1} />
     </div>
   );

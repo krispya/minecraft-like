@@ -8,6 +8,7 @@
     "proxy": "ffmpeg -y -i media/track_promo.mp4 -c:v libx264 -crf 18 -preset medium -pix_fmt yuv420p -g 25 -c:a aac -b:a 192k -movflags +faststart public/track_promo.mp4",
     "proxy:game": "ffmpeg -y -i media/minecraft-like.mov -an -vf fps=50,scale=1920:-2 -c:v libx264 -crf 18 -preset medium -pix_fmt yuv420p -g 25 -movflags +faststart public/minecraft-like.mp4",
     "proxy:paris": "ffmpeg -y -i media/paris_promo_full.mp4 -an -vf fps=50,scale=1920:-2 -c:v libx264 -crf 18 -preset medium -pix_fmt yuv420p -g 25 -movflags +faststart public/paris_promo_full.mp4",
+    "proxy:watch": "ffmpeg -y -i media/faraz_watch.mov -an -vf fps=50,scale=1920:-2 -c:v libx264 -crf 18 -preset medium -pix_fmt yuv420p -g 25 -movflags +faststart public/faraz_watch.mp4",
     "render": "remotion render Promo out/promo.mp4",
     "still": "remotion still Promo out/still.png",
     "typecheck": "tsc --noEmit"

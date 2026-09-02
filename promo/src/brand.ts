@@ -1,6 +1,3 @@
-// Brand colours. The promo uses the dark ramp end as its ground, the light
-// ramp end as its type, and teal as the one accent.
-
 export const brand = {
   dark: '#36342f',
   light: '#eae5da',

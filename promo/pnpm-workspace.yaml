@@ -1,4 +1,4 @@
-# Makes promo its own pnpm root so the Remotion dependency tree stays out of the game install
+# Keeps Remotion dependencies isolated from the game workspace.
 allowBuilds:
   esbuild: true
 minimumReleaseAgeExclude:

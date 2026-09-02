@@ -1,5 +1,4 @@
-// Geist and Geist Mono from the brand system, latin subset, served from
-// public/fonts so a render never depends on the network.
+// Load local font files so rendering does not depend on the network.
 
 import { loadFont } from '@remotion/fonts';
 import { staticFile } from 'remotion';

@@ -1,9 +1,4 @@
-// Turns the analysis in beats.json into timing primitives.
-//
-// The analyzer runs on the song, so the grid is the song's. The cut starts
-// `song.trimBeats` into it and everything downstream is authored in cut beats,
-// never in seconds or frames, so re trimming or re analyzing the song moves
-// the whole edit with it.
+// Timing primitives use cut beats relative to `song.trimBeats` on the analyzed grid.
 
 import { useCurrentFrame, useVideoConfig } from 'remotion';
 import analysis from './beats.json';
@@ -12,15 +7,12 @@ import { cues, footage, song } from './cues';
 export const bpm = analysis.bpm;
 export const secondsPerBeat = 60 / analysis.bpm;
 
-// Where the cut begins in the song. Cut beat 0 sits exactly on a song beat, so
-// no grid offset is left over inside the cut.
+// Song time where cut beat 0 begins.
 export const songStart = analysis.offset + song.trimBeats * secondsPerBeat;
 
-// Last cue out, plus the fade
 export const endBeat = Math.max(...cues.map((cue) => cue.at + cue.hold)) + song.fadeOut;
 
-// Hard cuts in the picture: every shot boundary in the footage and both edges
-// of every card. Drives the cut flash.
+// Footage boundaries and card edges that drive the cut flash.
 export const cutBeats = [
   ...footage.flatMap(({ at, shots }) => {
     let beat = at;
@@ -41,15 +33,14 @@ export function totalFrames(fps: number) {
   return beatsToFrames(endBeat, fps);
 }
 
-// Continuous position on the grid. 4.5 means halfway between beat 4 and beat 5.
+// Continuous cut-beat position. For example, 4.5 is halfway through beat 4.
 export function useBeatPosition() {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   return frame / fps / secondsPerBeat;
 }
 
-// Sawtooth that snaps to 1 on every beat and decays to 0 before the next one.
-// The exponent shapes how sharp the attack reads, higher is tighter.
+// Sawtooth pulse that decays from 1 on each selected beat.
 export function useBeatPulse(every = 1, sharpness = 3) {
   const position = useBeatPosition();
   if (position < 0) return 0;

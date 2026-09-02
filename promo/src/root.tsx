@@ -2,8 +2,7 @@ import { Composition } from 'remotion';
 import { totalFrames } from './beat';
 import { Promo } from './promo';
 
-// 50 fps matches the source so every composition frame maps to exactly one
-// video frame and the footage never resamples.
+// Matches the 50 fps proxy footage without frame resampling.
 export function Root() {
   return (
     <Composition

@@ -14,7 +14,8 @@ cd promo
 pnpm install
 pnpm proxy    # transcode the HEVC source to H.264 in public/, once
 pnpm proxy:game  # same for the game capture, resampled from 120 to 50 fps
-pnpm proxy:paris # and for the Paris day and night cycle, from 40 fps
+pnpm proxy:paris # and for the Paris capture, from 40 fps
+pnpm proxy:watch # and for the watch configurator capture, from 120 fps
 cp media/another_mix_ig.mp3 public/
 pnpm analyze  # detect tempo, beat phase and onsets in the song
 pnpm dev      # Remotion Studio at localhost:3000
@@ -60,7 +61,7 @@ from the last cue rather than from the footage.
 Shots play at natural length, so shot changes fall where the source cut them
 and only the cues sit on the grid. A playlist can name its own `src` in
 `public/` and a `rate`, which is how the game capture opens the piece and the
-Paris effects build up runs under the learn list at three times speed. The gaps between playlists are where the
+watch configurator capture runs under the learn list. The gaps between playlists are where the
 cards go. Each cue has an `at` and a `hold` in beats:
 
 ```ts
