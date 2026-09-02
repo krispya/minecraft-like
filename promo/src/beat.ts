@@ -7,7 +7,6 @@ import { useCurrentFrame, useVideoConfig } from 'remotion';
 import analysis from './beats.json';
 
 export const bpm = analysis.bpm;
-export const beatCount = analysis.beats.length;
 export const secondsPerBeat = 60 / analysis.bpm;
 
 // Detected scene changes, in beats. Useful for landing a cue on a hard cut.

@@ -17,11 +17,10 @@ pnpm dev      # Remotion Studio at localhost:3000
 ## Rendering
 
 ```sh
-pnpm render           # 1920x1080 -> out/promo.mp4
-pnpm render:vertical  # 1080x1920 -> out/promo-vertical.mp4
+pnpm render  # 1920x1080 -> out/promo.mp4
 ```
 
-Both take about 35 seconds for the 20 second piece.
+About 35 seconds for the 20 second piece.
 
 ## How the timing works
 
@@ -68,8 +67,8 @@ Five treatments, in `src/components/cue-views.tsx`:
 declaring it, so this project pins `@babel/runtime@^7` directly. Version 8 drops
 the `helpers/esm/*` export paths that build needs.
 
-`src/components/chrome.tsx` holds the full length furniture: the beat bar, the
-cut flash, edge scrims, vignette and grain.
+`src/components/chrome.tsx` holds the full length furniture: the cut flash,
+edge scrims, vignette and grain.
 
 ## Format notes
 
@@ -77,9 +76,6 @@ The source is 2048x1556 at 50fps with roughly 16:9 content letterboxed inside
 it on most shots. Compositions run at 50fps so every frame maps to one source
 frame.
 
-Landscape crops to 16:9, which lands close to those baked in bars. Vertical
-keeps the same 16:9 block over a blurred copy of itself and puts the type
-underneath, because a taller block only crops width and re exposes the bars.
-
-Cues are authored against a fixed 1920x1080 design frame that is centred and
-scaled per format, so one set of cues serves both.
+The delivery crops to 16:9, which lands close to those baked in bars. Cues are
+authored against a fixed 1920x1080 design frame that is scaled to the delivery,
+so the layout is resolution independent.

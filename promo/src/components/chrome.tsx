@@ -2,39 +2,7 @@
 // its own, it exists so the cuts and the cues sit inside something deliberate.
 
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion';
-import { beatCount, cutBeats, useBeatPosition, useBeatPulse } from '../beat';
-
-// A tick per beat with a bar that fills across the piece. The current beat
-// brightens on its attack so the strip doubles as a metronome readout.
-export function BeatBar() {
-  const position = useBeatPosition();
-  const pulse = useBeatPulse();
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        left: 110,
-        right: 110,
-        bottom: 64,
-        display: 'flex',
-        gap: 4,
-        height: 6,
-      }}
-    >
-      {Array.from({ length: beatCount }, (_, index) => (
-        <div
-          key={index}
-          style={{
-            flex: 1,
-            background: 'white',
-            opacity:
-              index > position ? 0.16 : index === Math.floor(position) ? 0.4 + 0.6 * pulse : 0.55,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
+import { cutBeats, useBeatPosition } from '../beat';
 
 // Two frame lift on every detected cut. Small enough to feel like exposure
 // rather than a transition.
