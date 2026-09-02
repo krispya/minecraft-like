@@ -1,0 +1,33 @@
+# Makes promo its own pnpm root so the Remotion dependency tree stays out of the game install
+allowBuilds:
+  esbuild: true
+minimumReleaseAgeExclude:
+  - '@remotion/bundler@4.0.520'
+  - '@remotion/canvas@4.0.520'
+  - '@remotion/captions@4.0.520'
+  - '@remotion/cli@4.0.520'
+  - '@remotion/compositor-darwin-arm64@4.0.520'
+  - '@remotion/compositor-darwin-x64@4.0.520'
+  - '@remotion/compositor-linux-arm64-gnu@4.0.520'
+  - '@remotion/compositor-linux-arm64-musl@4.0.520'
+  - '@remotion/compositor-linux-x64-gnu@4.0.520'
+  - '@remotion/compositor-linux-x64-musl@4.0.520'
+  - '@remotion/compositor-win32-x64-msvc@4.0.520'
+  - '@remotion/google-fonts@4.0.520'
+  - '@remotion/licensing@4.0.520'
+  - '@remotion/media-parser@4.0.520'
+  - '@remotion/media-utils@4.0.520'
+  - '@remotion/media@4.0.520'
+  - '@remotion/player@4.0.520'
+  - '@remotion/renderer@4.0.520'
+  - '@remotion/streaming@4.0.520'
+  - '@remotion/studio-codemods@4.0.520'
+  - '@remotion/studio-protocol@4.0.520'
+  - '@remotion/studio-server@4.0.520'
+  - '@remotion/studio-shared@4.0.520'
+  - '@remotion/studio@4.0.520'
+  - '@remotion/timeline-utils@4.0.520'
+  - '@remotion/web-renderer@4.0.520'
+  - '@remotion/zod-types@4.0.520'
+  - remotion@4.0.520
+  - '@remotion/layout-utils@4.0.520'
