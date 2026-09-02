@@ -7,3 +7,6 @@ dist
 !.env.example
 .pnpm-store
 # managed:end
+
+.DS_Store
+out
