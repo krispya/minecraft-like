@@ -79,7 +79,9 @@ Create `player/renderer.tsx`. A **query** finds every entity that has a set of t
 
 ```tsx
 import type { Entity } from 'koota';
-import { useQuery, useTrait } from 'koota/react';
+import { useQuery, useTraitEffect } from 'koota/react';
+import { useState } from 'react';
+import { type Vector3Tuple } from 'three/webgpu';
 import { Position } from '../transform/traits';
 import { Player } from './traits';
 
@@ -90,10 +92,11 @@ export function PlayerRenderer() {
 
 // A stand-in for the player, two units tall like a Minecraft character.
 function PlayerView({ entity }: { entity: Entity }) {
-  const position = useTrait(entity, Position);
+  const [position, setPosition] = useState<Vector3Tuple>();
+  useTraitEffect(entity, Position, (value) => setPosition(value?.toArray()));
 
   return (
-    <mesh castShadow position={position?.toArray()}>
+    <mesh castShadow position={position}>
       <capsuleGeometry args={[0.3, 1.4, 4, 16]} />
       <meshStandardMaterial color="hotpink" />
     </mesh>
@@ -101,7 +104,9 @@ function PlayerView({ entity }: { entity: Entity }) {
 }
 ```
 
-`useQuery` subscribes to which entities match, so a player that spawns or dies appears or disappears. Each `PlayerView` subscribes to its own `Position` with `useTrait`. This is the pattern for every renderer from here on: a query for the entities, a view per entity.
+`useQuery` subscribes to which entities match, so a player that spawns or dies appears or disappears. Each `PlayerView` subscribes to its own `Position` with `useTraitEffect`, which calls back whenever the value changes.
+
+The callback copies the vector into a plain array in React state. `Position` is one `Vector3` that systems will mutate in place every tick, and React expects a new value each time something changes. The React Compiler in particular caches anything derived from a value until that value is replaced, so the view keeps a copy rather than the live object. This is the pattern for every renderer from here on: a query for the entities, a view per entity, and a copy of each trait it draws.
 
 In `app.tsx`, import the renderer and add it inside the Canvas after `<Sun />`.
 

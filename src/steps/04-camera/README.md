@@ -77,7 +77,9 @@ Create `camera/renderer.tsx`. It follows the same shape as the player renderer, 
 ```tsx
 import { PerspectiveCamera } from '@react-three/drei/webgpu';
 import type { Entity } from 'koota';
-import { useQuery, useTrait } from 'koota/react';
+import { useQuery, useTraitEffect } from 'koota/react';
+import { useState } from 'react';
+import { type QuaternionTuple, type Vector3Tuple } from 'three/webgpu';
 import { Position, Rotation } from '../transform/traits';
 import { Camera } from './traits';
 
@@ -87,21 +89,16 @@ export function CameraRenderer() {
 }
 
 function CameraView({ entity }: { entity: Entity }) {
-  const position = useTrait(entity, Position);
-  const rotation = useTrait(entity, Rotation);
+  const [position, setPosition] = useState<Vector3Tuple>();
+  useTraitEffect(entity, Position, (value) => setPosition(value?.toArray()));
+  const [rotation, setRotation] = useState<QuaternionTuple>();
+  useTraitEffect(entity, Rotation, (value) => setRotation(value?.toArray()));
 
-  return (
-    <PerspectiveCamera
-      makeDefault
-      fov={70}
-      position={position?.toArray()}
-      quaternion={rotation?.toArray()}
-    />
-  );
+  return <PerspectiveCamera makeDefault fov={70} position={position} quaternion={rotation} />;
 }
 ```
 
-`makeDefault` tells Fiber to draw the scene through this camera. The field of view is wider than the Canvas default, closer to Minecraft's. `toArray` copies the vectors into plain arrays, since props should be values rather than objects the simulation keeps mutating.
+`makeDefault` tells Fiber to draw the scene through this camera. The field of view is wider than the Canvas default, closer to Minecraft's. Position and rotation are copied into arrays the same way as the player's position.
 
 In `app.tsx`, import the renderer, drop the `camera` prop from the Canvas, and add the renderer to the scene.
 

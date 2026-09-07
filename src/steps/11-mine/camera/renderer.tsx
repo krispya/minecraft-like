@@ -1,6 +1,8 @@
 import { PerspectiveCamera } from '@react-three/drei/webgpu';
 import type { Entity } from 'koota';
-import { useQuery, useTrait } from 'koota/react';
+import { useQuery, useTraitEffect } from 'koota/react';
+import { useState } from 'react';
+import { type QuaternionTuple, type Vector3Tuple } from 'three/webgpu';
 import { Position, Rotation } from '../transform/traits';
 import { Camera } from './traits';
 
@@ -10,15 +12,10 @@ export function CameraRenderer() {
 }
 
 function CameraView({ entity }: { entity: Entity }) {
-  const position = useTrait(entity, Position);
-  const rotation = useTrait(entity, Rotation);
+  const [position, setPosition] = useState<Vector3Tuple>();
+  useTraitEffect(entity, Position, (value) => setPosition(value?.toArray()));
+  const [rotation, setRotation] = useState<QuaternionTuple>();
+  useTraitEffect(entity, Rotation, (value) => setRotation(value?.toArray()));
 
-  return (
-    <PerspectiveCamera
-      makeDefault
-      fov={70}
-      position={position?.toArray()}
-      quaternion={rotation?.toArray()}
-    />
-  );
+  return <PerspectiveCamera makeDefault fov={70} position={position} quaternion={rotation} />;
 }

@@ -105,14 +105,14 @@ updateCharacterState(world); // <--
 
 ## 3. Play the matching clip
 
-In `player/renderer.tsx`, replace the imports above `Position` with these. The new names are the animation types, `useTag`, `useRef`, `useFrame` and `Velocity`.
+In `player/renderer.tsx`, replace the imports with these. The new names are the animation types, `useTag`, `useRef`, `useFrame` and `Velocity`.
 
 ```tsx
 import { useAnimations, useGLTF } from '@react-three/drei/webgpu'; // <--
 import { useFrame } from '@react-three/fiber/webgpu'; // <--
 import type { Entity } from 'koota';
-import { useQuery, useTag, useTrait } from 'koota/react'; // <--
-import { useEffect, useMemo, useRef } from 'react'; // <--
+import { useQuery, useTag, useTrait, useTraitEffect } from 'koota/react'; // <--
+import { useEffect, useMemo, useRef, useState } from 'react'; // <--
 import {
   type AnimationAction,
   type AnimationClip,
@@ -120,11 +120,15 @@ import {
   MathUtils,
   Mesh,
   type Object3D,
+  type QuaternionTuple,
   Vector3,
-} from 'three/webgpu'; // <--
+  type Vector3Tuple,
+} from 'three/webgpu';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { IsWalking } from '../character/traits'; // <--
 import { BoxCollider, Velocity } from '../physics/traits'; // <--
+import { Position, Rotation } from '../transform/traits';
+import { Player } from './traits';
 ```
 
 In `PlayerView`, replace the existing `useGLTF` line to also read the animation clips.
@@ -136,8 +140,7 @@ const { scene, animations } = useGLTF(MODEL_URL);
 Call the animation hook after reading the position and rotation.
 
 ```tsx
-const position = useTrait(entity, Position);
-const rotation = useTrait(entity, Rotation);
+useTraitEffect(entity, Rotation, (value) => setRotation(value?.toArray()));
 
 useCharacterAnimation(entity, animations, model); // <--
 ```

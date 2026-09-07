@@ -172,36 +172,42 @@ The axe has no skeleton, so a plain `clone` is enough. The numbers on the groups
 In `player/renderer.tsx`, add `createPortal`, `useWorld`, `AnimationUtils`, `LoopOnce` and the two item imports.
 
 ```tsx
+import { useAnimations, useGLTF } from '@react-three/drei/webgpu';
 import { createPortal, useFrame } from '@react-three/fiber/webgpu'; // <--
 import type { Entity } from 'koota';
-import { useQuery, useTag, useTrait, useWorld } from 'koota/react'; // <--
-import { useEffect, useMemo, useRef } from 'react';
+import { useQuery, useTag, useTrait, useTraitEffect, useWorld } from 'koota/react'; // <--
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   type AnimationAction,
   type AnimationClip,
-  AnimationUtils, // <--
+  AnimationUtils,
   Box3,
-  LoopOnce, // <--
+  LoopOnce,
   MathUtils,
   Mesh,
   type Object3D,
+  type QuaternionTuple,
   Vector3,
+  type Vector3Tuple,
 } from 'three/webgpu';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { IsWalking } from '../character/traits';
 import { HeldAxe } from '../item/renderer'; // <--
 import { ToolSwing } from '../item/traits'; // <--
+import { BoxCollider, Velocity } from '../physics/traits';
+import { Position, Rotation } from '../transform/traits';
+import { Player } from './traits';
 ```
 
 Inside `PlayerView`, find the arm bone and portal the axe into it.
 
 ```tsx
-const rotation = useTrait(entity, Rotation);
+useTraitEffect(entity, Rotation, (value) => setRotation(value?.toArray()));
 const rightArm = useMemo(() => model.getObjectByName('RightArm'), [model]); // <--
 ```
 
 ```tsx
-<group position={position?.toArray()} quaternion={rotation?.toArray()}>
+<group position={position} quaternion={rotation}>
   <primitive object={model} position={modelOffset} />
   {rightArm && createPortal(<HeldAxe />, rightArm, { injectScene: false })}
 </group>

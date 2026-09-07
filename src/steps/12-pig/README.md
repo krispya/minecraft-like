@@ -155,10 +155,17 @@ Create `pig/renderer.tsx`. As with the player, clone the model, align it with th
 import { useAnimations, useGLTF } from '@react-three/drei/webgpu';
 import { useFrame } from '@react-three/fiber/webgpu';
 import type { Entity } from 'koota';
-import { useQuery, useTag, useTrait } from 'koota/react';
-import { useEffect, useMemo } from 'react';
-import { Box3, MathUtils, Mesh, Vector3 } from 'three/webgpu';
+import { useQuery, useTag, useTrait, useTraitEffect } from 'koota/react';
+import { useEffect, useMemo, useState } from 'react';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import {
+  Box3,
+  MathUtils,
+  Mesh,
+  type QuaternionTuple,
+  Vector3,
+  type Vector3Tuple,
+} from 'three/webgpu';
 import { IsWalking } from '../character/traits';
 import { BoxCollider, Velocity } from '../physics/traits';
 import { Position, Rotation } from '../transform/traits';
@@ -185,8 +192,10 @@ function PigView({ entity }: { entity: Entity }) {
     return [-center.x, -bounds.min.y - (box?.size.y ?? 0) / 2, -center.z] as const;
   }, [box, model]);
 
-  const position = useTrait(entity, Position);
-  const rotation = useTrait(entity, Rotation);
+  const [position, setPosition] = useState<Vector3Tuple>();
+  useTraitEffect(entity, Position, (value) => setPosition(value?.toArray()));
+  const [rotation, setRotation] = useState<QuaternionTuple>();
+  useTraitEffect(entity, Rotation, (value) => setRotation(value?.toArray()));
 
   usePigAnimation(entity, animations, model);
 
@@ -200,7 +209,7 @@ function PigView({ entity }: { entity: Entity }) {
   }, [model]);
 
   return (
-    <group position={position?.toArray()} quaternion={rotation?.toArray()}>
+    <group position={position} quaternion={rotation}>
       <primitive object={model} position={modelOffset} />
     </group>
   );

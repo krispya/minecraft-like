@@ -1,9 +1,9 @@
 import { useGLTF } from '@react-three/drei/webgpu';
 import type { Entity } from 'koota';
-import { useQuery, useTrait } from 'koota/react';
-import { useEffect, useMemo } from 'react';
-import { Box3, Mesh, Vector3 } from 'three/webgpu';
+import { useQuery, useTrait, useTraitEffect } from 'koota/react';
+import { useEffect, useMemo, useState } from 'react';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { Box3, Mesh, type QuaternionTuple, Vector3, type Vector3Tuple } from 'three/webgpu';
 import { BoxCollider } from '../physics/traits';
 import { Position, Rotation } from '../transform/traits';
 import { Player } from './traits';
@@ -32,8 +32,10 @@ function PlayerView({ entity }: { entity: Entity }) {
     return [-center.x, -bounds.min.y - (box?.size.y ?? 0) / 2, -center.z] as const;
   }, [box, model]);
 
-  const position = useTrait(entity, Position);
-  const rotation = useTrait(entity, Rotation);
+  const [position, setPosition] = useState<Vector3Tuple>();
+  useTraitEffect(entity, Position, (value) => setPosition(value?.toArray()));
+  const [rotation, setRotation] = useState<QuaternionTuple>();
+  useTraitEffect(entity, Rotation, (value) => setRotation(value?.toArray()));
 
   useEffect(() => {
     model.traverse((object) => {
@@ -45,7 +47,7 @@ function PlayerView({ entity }: { entity: Entity }) {
   }, [model]);
 
   return (
-    <group position={position?.toArray()} quaternion={rotation?.toArray()}>
+    <group position={position} quaternion={rotation}>
       <primitive object={model} position={modelOffset} />
     </group>
   );
