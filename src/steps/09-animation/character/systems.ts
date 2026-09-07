@@ -23,11 +23,11 @@ export function updateCharacterController(world: World) {
       const changeZ = targetZ - velocity.z;
       const changeLength = Math.hypot(changeX, changeZ);
       let isGrounded = entity.has(IsGrounded);
-      // Nothing to push against in the air, so the velocity carries.
+      // With no input, apply friction only on the ground.
       const rate = hasInput ? controller.acceleration : isGrounded ? controller.friction : 0;
       const maxChange = rate * delta;
 
-      // Turn toward the input. The model faces -z, so no input is a yaw of zero.
+      // Turn toward the input. Forward input faces -z, which is a yaw of zero.
       if (hasInput) {
         const targetYaw = Math.atan2(-input.x, input.y);
         targetRotation.setFromAxisAngle(UP, targetYaw);

@@ -14,7 +14,7 @@ export const playerActions = createActions((world) => ({
       Position(new Vector3(...position)),
       Rotation,
       Velocity,
-      // Minecraft's player hitbox.
+      // A box matching the capsule's width and height.
       BoxCollider({ size: new Vector3(0.6, 2, 0.6) })
     );
   },

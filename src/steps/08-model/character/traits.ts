@@ -8,8 +8,8 @@ export const CharacterController = trait({
   friction: 70,
   gravity: -24,
   jumpSpeed: 8,
-  // How quickly the character faces where it is going, in e-folds per second.
+  // How quickly the character turns toward the input. Higher values turn faster.
   turnSpeed: 10,
 });
-// What the character wants to do this tick. x is right and y is forward, each -1 to 1.
+// Movement input in world space. x points along +x and y along -z, each -1 to 1.
 export const Input = trait({ x: 0, y: 0, jump: false });

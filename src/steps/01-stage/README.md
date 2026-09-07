@@ -1,6 +1,6 @@
 # 1. Set the stage
 
-We start with a scene and nothing else. We'll build it the usual React Three Fiber way, everything in one component tree: a canvas, a sky, a sun, a ground and a capsule standing in for the player.
+Start with a visible scene so we have somewhere to build the game. Add a sky, lighting, grass and a capsule to stand in for the player.
 
 Work directly in the [src/game](../../game/) folder. Its `app.tsx` is an empty Canvas. Make the following edits there and keep using this folder for every lesson. The files beside this guide contain the completed version.
 
@@ -9,9 +9,9 @@ Work directly in the [src/game](../../game/) folder. Its `app.tsx` is an empty C
 Replace the contents of `app.tsx` with a Canvas that has a sky, some fill light and a sun.
 
 ```tsx
-import { Sky, useTexture } from '@react-three/drei/webgpu';
-import { Canvas } from '@react-three/fiber/webgpu';
-import { RepeatWrapping } from 'three/webgpu';
+import { Sky, useTexture } from '@react-three/drei/webgpu'
+import { Canvas } from '@react-three/fiber/webgpu'
+import { RepeatWrapping } from 'three/webgpu'
 
 export function App() {
   return (
@@ -19,21 +19,17 @@ export function App() {
       <Sky sunPosition={[100, 20, 100]} />
       <ambientLight intensity={0.3 * Math.PI} />
       <Sun />
-
-      <Player />
-      <Ground />
     </Canvas>
-  );
+  )
 }
 ```
 
-Everything comes from the `webgpu` entries of Fiber and drei, which draw with WebGPU and fall back to WebGL where the browser lacks it. `shadows` turns on shadow maps for the renderer. The camera starts a few units back and up, looking at the origin.
+Everything comes from the `webgpu` entries of Fiber and drei, which draw with WebGPU and fall back to WebGL where the browser lacks it. `shadows` enables shadows. The camera starts above and behind the origin, looking toward it. `ambientLight` lights every surface, while `Sun` gives the light a direction.
 
 Add `Sun` below `App`.
 
 ```tsx
-// One directional light casts every shadow. Its shadow camera is a box around the origin, so
-// shadows fade out far from the middle of the stage.
+// One directional light casts shadows inside a box around the origin.
 function Sun() {
   return (
     <directionalLight
@@ -49,11 +45,13 @@ function Sun() {
       shadow-camera-far={400}
       shadow-bias={-0.0005}
     />
-  );
+  )
 }
 ```
 
-Shadows only fall inside the light's shadow camera, a box 120 units across.
+The light's shadow camera covers a box 120 units across. Only objects inside that box cast shadows.
+
+Run `pnpm dev` and open [your practice game](http://localhost:5173/). You should see the sky. The light needs a surface before we can see what it lights.
 
 ## 2. Player and ground
 
@@ -67,7 +65,7 @@ function Player() {
       <capsuleGeometry args={[0.3, 1.4, 4, 16]} />
       <meshStandardMaterial color="hotpink" />
     </mesh>
-  );
+  )
 }
 ```
 
@@ -77,22 +75,32 @@ The ground is a large plane turned flat. Add it below `Player`.
 
 ```tsx
 function Ground() {
-  const texture = useTexture('/grass.jpg');
-  texture.wrapS = texture.wrapT = RepeatWrapping;
+  const texture = useTexture('/grass.jpg')
+  texture.wrapS = texture.wrapT = RepeatWrapping
 
   return (
     <mesh receiveShadow rotation-x={-Math.PI / 2}>
       <planeGeometry args={[1000, 1000]} />
       <meshStandardMaterial map={texture} map-repeat={[240, 240]} color="green" />
     </mesh>
-  );
+  )
 }
 ```
 
-`useTexture` loads an image from the `public` folder. Repeating it 240 times across the plane keeps the grass small. A plane faces `+z`, so a quarter turn around `x` lays it flat.
+`useTexture` loads an image from `public`. Repeating it 240 times across the plane keeps the grass small. A plane faces `+z`, so a quarter turn around `x` lays it flat.
+
+Add both components inside the Canvas, after `<Sun />`.
+
+```tsx
+<Sun />
+<Player /> {/* <-- */}
+<Ground /> {/* <-- */}
+```
+
+## Try it
 
 Run `pnpm dev` and open [your practice game](http://localhost:5173/). You should see a pink capsule on green grass under a blue sky, with a shadow. Move the capsule's `position` to see it and its shadow move.
 
-Everything so far is view. The capsule's position lives in a prop, and there is nowhere for gravity or input to put a value. From the next lesson on we move the data out of React and into a simulation, one concept at a time, until `src/game` looks like [the tree in the overview](../../../README.md#where-we-end-up).
+The capsule's position still lives in a React prop. Next we start a simulation that will own and update the game data.
 
 [Run the completed step](http://localhost:5173/?step=1) · [Next, the frame loop →](../02-frameloop/README.md)

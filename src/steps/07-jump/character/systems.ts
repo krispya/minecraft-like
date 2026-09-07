@@ -18,7 +18,7 @@ export function updateCharacterController(world: World) {
       const changeZ = targetZ - velocity.z;
       const changeLength = Math.hypot(changeX, changeZ);
       let isGrounded = entity.has(IsGrounded);
-      // Nothing to push against in the air, so the velocity carries.
+      // With no input, apply friction only on the ground.
       const rate = hasInput ? controller.acceleration : isGrounded ? controller.friction : 0;
       const maxChange = rate * delta;
 

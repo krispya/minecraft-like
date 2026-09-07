@@ -18,7 +18,7 @@ export const pigActions = createActions((world) => {
       Position(position.clone()),
       Rotation,
       Velocity,
-      // Minecraft's pig hitbox.
+      // A box around the pig.
       BoxCollider({ size: new Vector3(0.9, 0.9, 0.9) })
     );
   };

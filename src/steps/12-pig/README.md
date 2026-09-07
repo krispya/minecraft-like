@@ -1,6 +1,6 @@
 # 12. Pigs
 
-Next we will add pigs that wander around. A pig has the same controller as the player, and the only difference is what writes its `Input`.
+Add pigs that choose their own movement. They use the same controller and physics as the player, with different settings and a timer that writes their `Input`.
 
 Continue in `src/game` from [lesson 11](../11-mine/README.md). The model is already in `public/minecraft-saddled-pig`.
 
@@ -9,10 +9,10 @@ Continue in `src/game` from [lesson 11](../11-mine/README.md). The model is alre
 Create `pig/traits.ts`:
 
 ```ts
-import { trait } from 'koota';
-import { Vector2 } from 'three';
+import { trait } from 'koota'
+import { Vector2 } from 'three'
 
-export const Pig = trait();
+export const Pig = trait()
 
 // A random stroll: rest for a while, then walk in a random direction for a while.
 export const Wander = trait({
@@ -26,20 +26,20 @@ export const Wander = trait({
   maxWalk: 3,
   // Fraction of the controller's max speed to amble at.
   speed: 0.25,
-});
+})
 ```
 
 Anything with `Wander` strolls, whether or not it is a pig.
 
-Create `pig/actions.ts`. Compare `spawnPig` with `spawnPlayer`: the same traits with different numbers, plus `Wander` in place of a keyboard.
+Create `pig/actions.ts`. `spawnPig` uses the same movement traits as `spawnPlayer`, with a smaller collider and different speeds. `Wander` supplies directions without keyboard input.
 
 ```ts
-import { createActions } from 'koota';
-import { Vector3 } from 'three';
-import { CharacterController, Input, IsIdle } from '../character/traits';
-import { BoxCollider, Velocity } from '../physics/traits';
-import { Position, Rotation } from '../transform/traits';
-import { Pig, Wander } from './traits';
+import { createActions } from 'koota'
+import { Vector3 } from 'three'
+import { CharacterController, Input, IsIdle } from '../character/traits'
+import { BoxCollider, Velocity } from '../physics/traits'
+import { Position, Rotation } from '../transform/traits'
+import { Pig, Wander } from './traits'
 
 export const pigActions = createActions((world) => {
   const spawnPig = (position: Vector3) => {
@@ -54,17 +54,17 @@ export const pigActions = createActions((world) => {
       Position(position.clone()),
       Rotation,
       Velocity,
-      // Minecraft's pig hitbox.
+      // A box around the pig.
       BoxCollider({ size: new Vector3(0.9, 0.9, 0.9) })
-    );
-  };
+    )
+  }
 
   return {
     spawnPig,
     // Drops a pig a few units from a spot, in a random direction.
     spawnPigNear: (position: Vector3, { minDistance = 2, maxDistance = 4 } = {}) => {
-      const angle = Math.random() * Math.PI * 2;
-      const distance = minDistance + Math.random() * (maxDistance - minDistance);
+      const angle = Math.random() * Math.PI * 2
+      const distance = minDistance + Math.random() * (maxDistance - minDistance)
 
       return spawnPig(
         new Vector3(
@@ -72,18 +72,18 @@ export const pigActions = createActions((world) => {
           position.y + 1,
           position.z + Math.sin(angle) * distance
         )
-      );
+      )
     },
-  };
-});
+  }
+})
 ```
 
 Add it to `actions.ts`:
 
 ```ts
-import { itemActions } from './item/actions';
-import { pigActions } from './pig/actions'; // <--
-import { playerActions } from './player/actions';
+import { itemActions } from './item/actions'
+import { pigActions } from './pig/actions' // <--
+import { playerActions } from './player/actions'
 ```
 
 ```ts
@@ -92,155 +92,157 @@ import { playerActions } from './player/actions';
 ...playerActions(world),
 ```
 
-## 2. Give it a mind
+## 2. Alternate walking and resting
 
 Create `pig/systems.ts`. Where `updatePlayerInput` reads keys, this reads a timer.
 
 ```ts
-import type { World } from 'koota';
-import { Input } from '../character/traits';
-import { Time } from '../time/traits';
-import { Wander } from './traits';
+import type { World } from 'koota'
+import { Input } from '../character/traits'
+import { Time } from '../time/traits'
+import { Wander } from './traits'
 
-const randomBetween = (min: number, max: number) => min + Math.random() * (max - min);
+const randomBetween = (min: number, max: number) => min + Math.random() * (max - min)
 
 // A pig's mind. It writes Input just like the keyboard does for the player.
 export function updateWanderInput(world: World) {
-  const { delta } = world.get(Time)!;
+  const { delta } = world.get(Time)!
 
   world.query(Wander, Input).updateEach(([wander, input]) => {
-    const isWalking = wander.heading.lengthSq() > 0;
-    wander.timer -= delta;
+    const isWalking = wander.heading.lengthSq() > 0
+    wander.timer -= delta
 
     // Time to switch: walkers rest, and resters pick a new direction to walk.
     if (wander.timer <= 0) {
       if (isWalking) {
-        wander.heading.set(0, 0);
-        wander.timer = randomBetween(wander.minRest, wander.maxRest);
+        wander.heading.set(0, 0)
+        wander.timer = randomBetween(wander.minRest, wander.maxRest)
       } else {
-        const angle = randomBetween(0, Math.PI * 2);
-        wander.heading.set(Math.cos(angle), Math.sin(angle)).multiplyScalar(wander.speed);
-        wander.timer = randomBetween(wander.minWalk, wander.maxWalk);
+        const angle = randomBetween(0, Math.PI * 2)
+        wander.heading.set(Math.cos(angle), Math.sin(angle)).multiplyScalar(wander.speed)
+        wander.timer = randomBetween(wander.minWalk, wander.maxWalk)
       }
     }
 
-    input.x = wander.heading.x;
-    input.y = wander.heading.y;
-    input.jump = false;
-  });
+    input.x = wander.heading.x
+    input.y = wander.heading.y
+    input.jump = false
+  })
 }
 ```
 
-From here on the pig is a character like any other. The controller moves it, physics grounds it, the state machine names what it is doing, and blocks stop it.
+When the timer runs out, a walking pig rests and a resting pig picks a direction. `Wander.speed` scales the input, so `0.25` of the controller's speed of `7` gives a top speed of `1.75` units per second.
+
+The existing controller, collisions and state system handle the rest. This does not add pathfinding or collisions between moving characters.
 
 In `frameloop.tsx`, run it beside the player's input.
 
 ```tsx
-import { updateWanderInput } from './pig/systems'; // <--
+import { updateWanderInput } from './pig/systems' // <--
 ```
 
 ```tsx
-updatePlayerInput(world);
-updateWanderInput(world); // <--
-updateCharacterController(world);
+updatePlayerInput(world)
+updateWanderInput(world) // <--
+updateCharacterController(world)
 ```
 
 ## 3. Render the pig
 
-Create `pig/renderer.tsx`. It is the player renderer with a different model and one clip, so you can use it as provided.
+Create `pig/renderer.tsx`. As with the player, clone the model, align it with the collider and read its transform. The pig has one walk clip, which fades out while resting.
 
 ```tsx
-import { useAnimations, useGLTF } from '@react-three/drei/webgpu';
-import { useFrame } from '@react-three/fiber/webgpu';
-import type { Entity } from 'koota';
-import { useQuery, useTag, useTrait } from 'koota/react';
-import { useEffect, useMemo } from 'react';
-import { Box3, MathUtils, Mesh, Vector3 } from 'three/webgpu';
-import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { IsWalking } from '../character/traits';
-import { BoxCollider, Velocity } from '../physics/traits';
-import { Position, Rotation } from '../transform/traits';
-import { Pig } from './traits';
+import { useAnimations, useGLTF } from '@react-three/drei/webgpu'
+import { useFrame } from '@react-three/fiber/webgpu'
+import type { Entity } from 'koota'
+import { useQuery, useTag, useTrait } from 'koota/react'
+import { useEffect, useMemo } from 'react'
+import { Box3, MathUtils, Mesh, Vector3 } from 'three/webgpu'
+import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js'
+import { IsWalking } from '../character/traits'
+import { BoxCollider, Velocity } from '../physics/traits'
+import { Position, Rotation } from '../transform/traits'
+import { Pig } from './traits'
 
 // Minecraft Saddled Pig by Nasabeat, licensed CC BY 4.0
 // https://sketchfab.com/3d-models/minecraft-saddled-pig-22a686ae544e41bfa640bc757e61d7a9
-const MODEL_URL = '/minecraft-saddled-pig/source/model.gltf';
+const MODEL_URL = '/minecraft-saddled-pig/source/model.gltf'
 
 export function PigRenderer() {
-  const pigs = useQuery(Pig, Position);
-  return pigs.map((entity) => <PigView key={entity.id()} entity={entity} />);
+  const pigs = useQuery(Pig, Position)
+  return pigs.map((entity) => <PigView key={entity.id()} entity={entity} />)
 }
 
 function PigView({ entity }: { entity: Entity }) {
-  const { scene, animations } = useGLTF(MODEL_URL);
-  const model = useMemo(() => clone(scene), [scene]);
+  const { scene, animations } = useGLTF(MODEL_URL)
+  const model = useMemo(() => clone(scene), [scene])
 
-  const box = useTrait(entity, BoxCollider);
+  const box = useTrait(entity, BoxCollider)
   const modelOffset = useMemo(() => {
-    const bounds = new Box3().setFromObject(model);
-    const center = bounds.getCenter(new Vector3());
+    const bounds = new Box3().setFromObject(model)
+    const center = bounds.getCenter(new Vector3())
 
-    return [-center.x, -bounds.min.y - (box?.size.y ?? 0) / 2, -center.z] as const;
-  }, [box, model]);
+    return [-center.x, -bounds.min.y - (box?.size.y ?? 0) / 2, -center.z] as const
+  }, [box, model])
 
-  const position = useTrait(entity, Position);
-  const rotation = useTrait(entity, Rotation);
+  const position = useTrait(entity, Position)
+  const rotation = useTrait(entity, Rotation)
 
-  usePigAnimation(entity, animations, model);
+  usePigAnimation(entity, animations, model)
 
   useEffect(() => {
     model.traverse((object) => {
-      if (!(object instanceof Mesh)) return;
+      if (!(object instanceof Mesh)) return
 
-      object.castShadow = true;
-      object.receiveShadow = true;
-    });
-  }, [model]);
+      object.castShadow = true
+      object.receiveShadow = true
+    })
+  }, [model])
 
   return (
     <group position={position?.toArray()} quaternion={rotation?.toArray()}>
       <primitive object={model} position={modelOffset} />
     </group>
-  );
+  )
 }
 
-// The pig has one clip, a walk, which fades in and out with the walking state.
+// Fade the pig's walk clip in and out with the walking state.
 function usePigAnimation(
   entity: Entity,
   animations: Parameters<typeof useAnimations>[0],
   model: Parameters<typeof useAnimations>[1]
 ) {
-  const { actions } = useAnimations(animations, model);
-  const isWalking = useTag(entity, IsWalking);
+  const { actions } = useAnimations(animations, model)
+  const isWalking = useTag(entity, IsWalking)
 
   useEffect(() => {
-    const walk = actions['animation.pig.walk'];
-    if (!walk) return;
+    const walk = actions['animation.pig.walk']
+    if (!walk) return
 
-    if (isWalking) walk.reset().fadeIn(0.15).play();
-    else walk.fadeOut(0.15);
-  }, [actions, isWalking]);
+    if (isWalking) walk.reset().fadeIn(0.15).play()
+    else walk.fadeOut(0.15)
+  }, [actions, isWalking])
 
   // Match the trot to the speed. One cycle covers about a unit and a half of ground.
   useFrame(() => {
-    const walk = actions['animation.pig.walk'];
-    const velocity = entity.get(Velocity);
-    if (!walk || !velocity) return;
+    const walk = actions['animation.pig.walk']
+    const velocity = entity.get(Velocity)
+    if (!walk || !velocity) return
 
-    const horizontalSpeed = Math.hypot(velocity.x, velocity.z);
-    const cyclesPerSecond = horizontalSpeed / 1.5;
-    walk.timeScale = MathUtils.clamp(cyclesPerSecond * walk.getClip().duration, 1, 4);
-  });
+    const horizontalSpeed = Math.hypot(velocity.x, velocity.z)
+    const cyclesPerSecond = horizontalSpeed / 1.5
+    walk.timeScale = MathUtils.clamp(cyclesPerSecond * walk.getClip().duration, 1, 4)
+  })
 }
 
-useGLTF.preload(MODEL_URL);
+useGLTF.preload(MODEL_URL)
 ```
 
 In `app.tsx`, add it to the scene.
 
 ```tsx
-import { PigRenderer } from './pig/renderer'; // <--
-import { PlayerRenderer } from './player/renderer';
+import { PigRenderer } from './pig/renderer' // <--
+import { PlayerRenderer } from './player/renderer'
 ```
 
 ```tsx
@@ -254,56 +256,60 @@ import { PlayerRenderer } from './player/renderer';
 In `world.ts`, spawn two next to the player.
 
 ```ts
-import { Time } from './time/traits';
-import { Position } from './transform/traits'; // <--
+import { Time } from './time/traits'
+import { Position } from './transform/traits' // <--
 ```
 
 ```ts
-const { spawnPlayer, spawnCamera, spawnGround, spawnBlockAt, spawnPigNear } = actions(world); // <--
+const { spawnPlayer, spawnCamera, spawnGround, spawnBlockAt, spawnPigNear } = actions(world) // <--
 ```
 
 ```ts
-const camera = spawnCamera();
-camera.add(Follows(player));
+const camera = spawnCamera()
+camera.add(Follows(player))
 // Some company. Press R for more.
-spawnPigNear(player.get(Position)!); // <--
-spawnPigNear(player.get(Position)!); // <--
+spawnPigNear(player.get(Position)!) // <--
+spawnPigNear(player.get(Position)!) // <--
 ```
 
 A key press should spawn more. Holding a key is state and lives in `Keys`, but a press is an event, so it fires an action from the hook. In `input/hooks.ts`, import what it needs.
 
 ```ts
-import type { World } from 'koota';
-import { useEffect } from 'react';
-import { actions } from '../actions'; // <--
-import { Player } from '../player/traits'; // <--
-import { Position } from '../transform/traits'; // <--
-import { Keys, Pointer, Wheel } from './traits';
+import type { World } from 'koota'
+import { useEffect } from 'react'
+import { actions } from '../actions' // <--
+import { Player } from '../player/traits' // <--
+import { Position } from '../transform/traits' // <--
+import { Keys, Pointer, Wheel } from './traits'
 ```
 
 Inside `useKeyboard`, read the action and replace `handleKeyDown`.
 
 ```ts
-const keys = world.get(Keys)!;
-const { spawnPigNear } = actions(world); // <--
+const keys = world.get(Keys)!
+const { spawnPigNear } = actions(world) // <--
 ```
 
 ```ts
 const handleKeyDown = (event: KeyboardEvent) => {
-  const key = event.key.toLowerCase();
+  const key = event.key.toLowerCase()
 
   // A press is an event, not a state, so it fires an action here rather than in a system.
   if (key === 'r' && !keys.has(key)) {
-    const position = world.queryFirst(Player, Position)?.get(Position);
-    if (position) spawnPigNear(position);
+    const position = world.queryFirst(Player, Position)?.get(Position)
+    if (position) spawnPigNear(position)
   }
 
-  setKey(key, true);
-};
+  setKey(key, true)
+}
 ```
 
-Run `pnpm dev` and open [your practice game](http://localhost:5173/). Two pigs amble around and stop to rest. Press R for more. Build a wall and watch a pig walk into it: it pushes until its timer runs out, then picks another way.
+## Try it
 
-You have a game. From here the paths branch: a first-person camera, more block kinds, terrain generation, riding the pigs. Each one starts with a trait.
+Open [your practice game](http://localhost:5173/). Two pigs fall to the ground, wander and pause to rest. Press R once to add one pig. Holding R should not keep spawning them.
+
+Build a wall across a pig's path. It should stop at the wall, rest when its walk timer expires, then choose another random direction. Increase `minRest` and `maxRest` in `pig/traits.ts` and reload to see longer pauses.
+
+The same controller now moves a player and pigs. Try adding another creature by defining its traits, input system and renderer.
 
 [Run the completed step](http://localhost:5173/?step=12) · [Back to overview](../../../README.md)

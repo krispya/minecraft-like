@@ -1,4 +1,4 @@
 import { trait } from 'koota';
 
-// A swing of the tool in hand. Six Minecraft ticks long.
+// Duration of one tool swing, in seconds.
 export const ToolSwing = trait({ duration: 0.3 });

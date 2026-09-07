@@ -39,8 +39,7 @@ function Clock() {
   );
 }
 
-// One directional light casts every shadow. Its shadow camera is a box around the origin, so
-// shadows fade out far from the middle of the stage.
+// One directional light casts shadows inside a box around the origin.
 function Sun() {
   return (
     <directionalLight

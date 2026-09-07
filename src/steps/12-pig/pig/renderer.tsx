@@ -52,7 +52,7 @@ function PigView({ entity }: { entity: Entity }) {
   );
 }
 
-// The pig has one clip, a walk, which fades in and out with the walking state.
+// Fade the pig's walk clip in and out with the walking state.
 function usePigAnimation(
   entity: Entity,
   animations: Parameters<typeof useAnimations>[0],

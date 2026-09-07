@@ -1,24 +1,18 @@
 # A Minecraft-like game, step by step
 
-We are going to build a small Minecraft-like game from scratch: a world to walk around in, blocks to place and break, and pigs to keep you company. The only libraries are [React Three Fiber](https://docs.pmnd.rs/react-three-fiber) and [Three.js](https://threejs.org/) for drawing with WebGPU, [drei](https://drei.docs.pmnd.rs/) for a few loaders and helpers, and [Koota](https://github.com/pmndrs/koota) for the game data.
+Build a small Minecraft-like game: walk, jump, place and break blocks, then add wandering pigs. [React Three Fiber](https://docs.pmnd.rs/react-three-fiber), [Three.js](https://threejs.org/) and [drei](https://drei.docs.pmnd.rs/) draw the scene with WebGPU. [Koota](https://github.com/pmndrs/koota) holds the game data.
 
 Start with [lesson 1](src/steps/01-stage/README.md) and edit the [src/game](src/game/) folder throughout all twelve lessons. Each guide shows every edit needed for the next step. The numbered folders in [src/steps](src/steps/) contain the completed examples.
 
-Run `pnpm dev` and open [your practice game](http://localhost:5173/). The bar at the top switches to [any completed step](http://localhost:5173/?step=1). Once the game runs, the numbers in each `traits.ts` are the knobs: change a speed or a size and reload.
+Run `pnpm install`, then `pnpm dev`, and open [your practice game](http://localhost:5173/). It starts with an empty Canvas. The numbered links at the top open the completed examples. Return to **game** to see your edits.
 
-## Day one
+Paths in each lesson are relative to `src/game`. Create folders as needed. `// <--` marks an edit, and `...` marks existing code to keep. After trying a different speed, size or spawn position, restore the lesson's values before continuing.
 
-Three ideas carry the whole course. Read them once now. Each lesson brings one back the moment the code needs it.
+## How the game fits together
 
-### Simulation, view, input
+**Input** records keys and clicks. The **simulation** applies rules, like movement and gravity. The **view** draws the result. Keeping the rules outside React lets us run the game without a screen.
 
-A game is a **simulation**. It has data, like where the player stands, and rules that change the data, like gravity. The **view** draws the data. It never changes it. The player's **input** feeds the simulation, which decides what to make of it.
-
-Keeping the three apart is the whole architecture. The simulation can run with no screen at all, and the view can be thrown away and redrawn from the data at any time.
-
-### Entities, traits, systems
-
-We keep the data in Koota, an entity component system. The vocabulary:
+Koota stores the simulation's data. Each lesson introduces these terms when it needs them:
 
 | Word       | Meaning                                                                  |
 | ---------- | ------------------------------------------------------------------------ |
@@ -29,13 +23,7 @@ We keep the data in Koota, an entity component system. The vocabulary:
 | **System** | A function that queries entities and updates their traits, once per tick |
 | **Action** | A function bound to a world that changes it, like spawning a player      |
 
-Actions are the API for changing the world from outside a system, the way mutations are for a database. Systems are the rules that run every tick.
-
-### Real time
-
-Nothing waits for the player. A clock ticks, the simulation advances, and the screen redraws, sixty or more times a second. On a 60 Hz screen each frame has 16.67 ms. On a 120 Hz screen it has 8.33 ms. Everything a tick does has to fit.
-
-The loop that runs each tick is the **frame loop**. Every system runs inside it.
+The **frame loop** runs the systems in order each tick. They read input, move characters, resolve collisions and update the camera. The view then draws the result.
 
 ## Lessons
 
@@ -54,7 +42,7 @@ The loop that runs each tick is the **frame loop**. Every system runs inside it.
 
 ## Where we end up
 
-Every folder in `src/game` is one concept. `traits.ts` is its data, `actions.ts` is how the data is changed, `systems.ts` advances it every tick, and `renderer.tsx` draws it. Nothing else knows about React.
+Each folder in `src/game` groups one part of the game. `traits.ts` defines its data, `actions.ts` provides operations such as spawning, `systems.ts` updates it each tick, and `renderer.tsx` draws it. React stays in the renderers, input hooks, app and frame loop.
 
 ```
 src/game
