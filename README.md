@@ -27,9 +27,9 @@ The **frame loop** runs the systems in order each tick. They read input, move ch
 
 ## Lessons
 
-1. [Stage](src/steps/01-stage/README.md) draws a ground, a sky and a stand-in player the usual React Three Fiber way.
+1. [Stage](src/steps/01-stage/README.md) draws a ground and a sky the usual React Three Fiber way.
 2. [Frame loop](src/steps/02-frameloop/README.md) creates the world, a `Time` trait, the first system and a clock on screen.
-3. [Player](src/steps/03-player/README.md) spawns the player as an entity and draws it from a query.
+3. [Player](src/steps/03-player/README.md) spawns a player entity and draws it from a query.
 4. [Camera](src/steps/04-camera/README.md) makes the camera an entity too.
 5. [Orbit](src/steps/05-orbit/README.md) reads the pointer and wheel and orbits the camera.
 6. [Controller](src/steps/06-controller/README.md) reads the keyboard, moves the player and has the camera follow.

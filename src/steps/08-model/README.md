@@ -15,21 +15,21 @@ export const CharacterController = trait({
   jumpSpeed: 8,
   // How quickly the character turns toward the input. Higher values turn faster.
   turnSpeed: 10, // <--
-})
+});
 ```
 
 In `character/systems.ts`, import the math and `Rotation`, and keep two scratch values outside the system so it does not allocate every tick.
 
 ```ts
-import type { World } from 'koota'
-import { Quaternion, Vector3 } from 'three' // <--
-import { IsGrounded, Velocity } from '../physics/traits'
-import { Time } from '../time/traits'
-import { Position, Rotation } from '../transform/traits' // <--
-import { CharacterController, Input } from './traits'
+import type { World } from 'koota';
+import { Quaternion, Vector3 } from 'three'; // <--
+import { IsGrounded, Velocity } from '../physics/traits';
+import { Time } from '../time/traits';
+import { Position, Rotation } from '../transform/traits'; // <--
+import { CharacterController, Input } from './traits';
 
-const UP = new Vector3(0, 1, 0) // <--
-const targetRotation = new Quaternion() // <--
+const UP = new Vector3(0, 1, 0); // <--
+const targetRotation = new Quaternion(); // <--
 ```
 
 Add `Rotation` to the query.
@@ -44,10 +44,10 @@ After `maxChange`, turn toward the input. **Yaw** is rotation around the vertica
 ```ts
 // Turn toward the input. Forward input faces -z, which is a yaw of zero.
 if (hasInput) {
-  const targetYaw = Math.atan2(-input.x, input.y)
-  targetRotation.setFromAxisAngle(UP, targetYaw)
-  const turnAlpha = 1 - Math.exp(-controller.turnSpeed * delta)
-  rotation.slerp(targetRotation, turnAlpha)
+  const targetYaw = Math.atan2(-input.x, input.y);
+  targetRotation.setFromAxisAngle(UP, targetYaw);
+  const turnAlpha = 1 - Math.exp(-controller.turnSpeed * delta);
+  rotation.slerp(targetRotation, turnAlpha);
 }
 ```
 
@@ -56,7 +56,7 @@ if (hasInput) {
 In `player/actions.ts`, give the player a `Rotation`.
 
 ```ts
-import { Position, Rotation } from '../transform/traits' // <--
+import { Position, Rotation } from '../transform/traits'; // <--
 ```
 
 ```ts
@@ -70,60 +70,60 @@ Velocity,
 Replace `player/renderer.tsx`. The renderer's job is unchanged: one view per player, drawn from its traits.
 
 ```tsx
-import { useGLTF } from '@react-three/drei/webgpu'
-import type { Entity } from 'koota'
-import { useQuery, useTrait } from 'koota/react'
-import { useEffect, useMemo } from 'react'
-import { Box3, Mesh, Vector3 } from 'three/webgpu'
-import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js'
-import { BoxCollider } from '../physics/traits'
-import { Position, Rotation } from '../transform/traits'
-import { Player } from './traits'
+import { useGLTF } from '@react-three/drei/webgpu';
+import type { Entity } from 'koota';
+import { useQuery, useTrait } from 'koota/react';
+import { useEffect, useMemo } from 'react';
+import { Box3, Mesh, Vector3 } from 'three/webgpu';
+import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { BoxCollider } from '../physics/traits';
+import { Position, Rotation } from '../transform/traits';
+import { Player } from './traits';
 
 // Minecraft idle and walking animation by fabizok, licensed CC BY 4.0
 // https://sketchfab.com/3d-models/minecraft-idle-and-walking-animation-a3f0270cc1ef42d59be153204d03b0f8
-const MODEL_URL = '/minecraft-character/source/model.gltf'
+const MODEL_URL = '/minecraft-character/source/model.gltf';
 
 export function PlayerRenderer() {
-  const players = useQuery(Player, Position)
-  return players.map((entity) => <PlayerView key={entity.id()} entity={entity} />)
+  const players = useQuery(Player, Position);
+  return players.map((entity) => <PlayerView key={entity.id()} entity={entity} />);
 }
 
 function PlayerView({ entity }: { entity: Entity }) {
-  const { scene } = useGLTF(MODEL_URL)
+  const { scene } = useGLTF(MODEL_URL);
   // The loaded scene is shared. A skinned mesh needs its bones cloned along with it.
-  const model = useMemo(() => clone(scene), [scene])
+  const model = useMemo(() => clone(scene), [scene]);
 
   // The entity's Position is the middle of its collider, so shift the model to stand on the
   // collider's bottom, centered.
-  const box = useTrait(entity, BoxCollider)
+  const box = useTrait(entity, BoxCollider);
   const modelOffset = useMemo(() => {
-    const bounds = new Box3().setFromObject(model)
-    const center = bounds.getCenter(new Vector3())
+    const bounds = new Box3().setFromObject(model);
+    const center = bounds.getCenter(new Vector3());
 
-    return [-center.x, -bounds.min.y - (box?.size.y ?? 0) / 2, -center.z] as const
-  }, [box, model])
+    return [-center.x, -bounds.min.y - (box?.size.y ?? 0) / 2, -center.z] as const;
+  }, [box, model]);
 
-  const position = useTrait(entity, Position)
-  const rotation = useTrait(entity, Rotation)
+  const position = useTrait(entity, Position);
+  const rotation = useTrait(entity, Rotation);
 
   useEffect(() => {
     model.traverse((object) => {
-      if (!(object instanceof Mesh)) return
+      if (!(object instanceof Mesh)) return;
 
-      object.castShadow = true
-      object.receiveShadow = true
-    })
-  }, [model])
+      object.castShadow = true;
+      object.receiveShadow = true;
+    });
+  }, [model]);
 
   return (
     <group position={position?.toArray()} quaternion={rotation?.toArray()}>
       <primitive object={model} position={modelOffset} />
     </group>
-  )
+  );
 }
 
-useGLTF.preload(MODEL_URL)
+useGLTF.preload(MODEL_URL);
 ```
 
 `useGLTF` caches the file, so every view gets the same scene and has to copy it. A skinned mesh needs its skeleton copied along with it, which is what `SkeletonUtils.clone` does. The group carries the entity's transform and the model hangs inside it, offset so its feet sit at the bottom of the collider.

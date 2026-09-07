@@ -15,8 +15,8 @@ importers:
         specifier: 10.0.0-canary.c385e9f
         version: 10.0.0-canary.c385e9f(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1)
       koota:
-        specifier: ^0.6.6
-        version: 0.6.6(@types/react@19.2.18)(react@19.2.8)
+        specifier: 0.6.6-canary.385cdc6
+        version: 0.6.6-canary.385cdc6(@types/react@19.2.18)(react@19.2.8)
       math:
         specifier: 1.0.0-canary-37519dcd-20260903
         version: 1.0.0-canary-37519dcd-20260903
@@ -596,15 +596,18 @@ packages:
     peerDependencies:
       react: ^19.0.0
 
-  koota@0.6.6:
-    resolution: {integrity: sha512-Fn8lSooH3u9TIP+eAMugFrOju40Ec70+sB7x1eZBB3H0Lki2hyIbFAodk3NDB/RIRzoMs54O4422BVN6SbtWfw==}
+  koota@0.6.6-canary.385cdc6:
+    resolution: {integrity: sha512-G0C8UaDnB/WD2ApLt8eR5ApOdmLWvQZq9NNHvzSnfv13B1Se/6jDKw7I4tc4SEFU9uSMKvcGSJOmOIgIUKEYZA==}
     peerDependencies:
       '@types/react': '>=18.0.0'
       react: '>=18.0.0'
+      svelte: '>=5.0.0'
     peerDependenciesMeta:
       '@types/react':
         optional: true
       react:
+        optional: true
+      svelte:
         optional: true
 
   lie@3.3.0:
@@ -1278,7 +1281,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
 
-  koota@0.6.6(@types/react@19.2.18)(react@19.2.8):
+  koota@0.6.6-canary.385cdc6(@types/react@19.2.18)(react@19.2.8):
     optionalDependencies:
       '@types/react': 19.2.18
       react: 19.2.8

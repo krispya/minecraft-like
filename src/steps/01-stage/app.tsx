@@ -4,12 +4,11 @@ import { RepeatWrapping } from 'three/webgpu';
 
 export function App() {
   return (
-    <Canvas shadows camera={{ position: [4, 3, 6], fov: 45 }}>
+    <Canvas shadows camera={{ position: [4, 1.5, 6], fov: 45 }}>
       <Sky sunPosition={[100, 20, 100]} />
       <ambientLight intensity={0.3 * Math.PI} />
       <Sun />
 
-      <Player />
       <Ground />
     </Canvas>
   );
@@ -31,16 +30,6 @@ function Sun() {
       shadow-camera-far={400}
       shadow-bias={-0.0005}
     />
-  );
-}
-
-// A stand-in for the player, two units tall like a Minecraft character.
-function Player() {
-  return (
-    <mesh castShadow position={[0, 1, 0]}>
-      <capsuleGeometry args={[0.3, 1.4, 4, 16]} />
-      <meshStandardMaterial color="hotpink" />
-    </mesh>
   );
 }
 

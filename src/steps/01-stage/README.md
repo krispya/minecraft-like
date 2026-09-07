@@ -1,6 +1,6 @@
 # 1. Set the stage
 
-Start with a visible scene so we have somewhere to build the game. Add a sky, lighting, grass and a capsule to stand in for the player.
+Start with a visible scene so we have somewhere to build the game. Add a sky, lighting and grass.
 
 Work directly in the [src/game](../../game/) folder. Its `app.tsx` is an empty Canvas. Make the following edits there and keep using this folder for every lesson. The files beside this guide contain the completed version.
 
@@ -9,22 +9,22 @@ Work directly in the [src/game](../../game/) folder. Its `app.tsx` is an empty C
 Replace the contents of `app.tsx` with a Canvas that has a sky, some fill light and a sun.
 
 ```tsx
-import { Sky, useTexture } from '@react-three/drei/webgpu'
-import { Canvas } from '@react-three/fiber/webgpu'
-import { RepeatWrapping } from 'three/webgpu'
+import { Sky, useTexture } from '@react-three/drei/webgpu';
+import { Canvas } from '@react-three/fiber/webgpu';
+import { RepeatWrapping } from 'three/webgpu';
 
 export function App() {
   return (
-    <Canvas shadows camera={{ position: [4, 3, 6], fov: 45 }}>
+    <Canvas shadows camera={{ position: [4, 1.5, 6], fov: 45 }}>
       <Sky sunPosition={[100, 20, 100]} />
       <ambientLight intensity={0.3 * Math.PI} />
       <Sun />
     </Canvas>
-  )
+  );
 }
 ```
 
-Everything comes from the `webgpu` entries of Fiber and drei, which draw with WebGPU and fall back to WebGL where the browser lacks it. `shadows` enables shadows. The camera starts above and behind the origin, looking toward it. `ambientLight` lights every surface, while `Sun` gives the light a direction.
+Everything comes from the `webgpu` entries of Fiber and drei, which draw with WebGPU and fall back to WebGL where the browser lacks it. `shadows` enables shadows. The camera starts behind the origin at about eye height, looking toward it. Keeping it low keeps the horizon in view. `ambientLight` lights every surface, while `Sun` gives the light a direction.
 
 Add `Sun` below `App`.
 
@@ -45,7 +45,7 @@ function Sun() {
       shadow-camera-far={400}
       shadow-bias={-0.0005}
     />
-  )
+  );
 }
 ```
 
@@ -53,54 +53,38 @@ The light's shadow camera covers a box 120 units across. Only objects inside tha
 
 Run `pnpm dev` and open [your practice game](http://localhost:5173/). You should see the sky. The light needs a surface before we can see what it lights.
 
-## 2. Player and ground
+## 2. Ground
 
-Until we have a model, a capsule stands in for the player. Add it below `Sun`.
-
-```tsx
-// A stand-in for the player, two units tall like a Minecraft character.
-function Player() {
-  return (
-    <mesh castShadow position={[0, 1, 0]}>
-      <capsuleGeometry args={[0.3, 1.4, 4, 16]} />
-      <meshStandardMaterial color="hotpink" />
-    </mesh>
-  )
-}
-```
-
-The capsule is 2 units tall, like a Minecraft character. Its center sits at `y = 1`, which puts its feet on the ground.
-
-The ground is a large plane turned flat. Add it below `Player`.
+The ground is a large plane turned flat. Add it below `Sun`.
 
 ```tsx
 function Ground() {
-  const texture = useTexture('/grass.jpg')
-  texture.wrapS = texture.wrapT = RepeatWrapping
+  const texture = useTexture('/grass.jpg');
+  texture.wrapS = texture.wrapT = RepeatWrapping;
 
   return (
     <mesh receiveShadow rotation-x={-Math.PI / 2}>
       <planeGeometry args={[1000, 1000]} />
       <meshStandardMaterial map={texture} map-repeat={[240, 240]} color="green" />
     </mesh>
-  )
+  );
 }
 ```
 
 `useTexture` loads an image from `public`. Repeating it 240 times across the plane keeps the grass small. A plane faces `+z`, so a quarter turn around `x` lays it flat.
 
-Add both components inside the Canvas, after `<Sun />`.
+Add it inside the Canvas, after `<Sun />`.
 
 ```tsx
 <Sun />
-<Player /> {/* <-- */}
+
 <Ground /> {/* <-- */}
 ```
 
 ## Try it
 
-Run `pnpm dev` and open [your practice game](http://localhost:5173/). You should see a pink capsule on green grass under a blue sky, with a shadow. Move the capsule's `position` to see it and its shadow move.
+Run `pnpm dev` and open [your practice game](http://localhost:5173/). You should see green grass under a blue sky. Change `sunPosition` to move the sun across it.
 
-The capsule's position still lives in a React prop. Next we start a simulation that will own and update the game data.
+Nothing here changes from one frame to the next. Next we start a simulation that will own and update the game data.
 
 [Run the completed step](http://localhost:5173/?step=1) · [Next, the frame loop →](../02-frameloop/README.md)

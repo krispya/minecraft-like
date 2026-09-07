@@ -10,17 +10,17 @@ In `block/traits.ts`, add `BlockDamage` after `Block`.
 
 ```ts
 // Hits taken so far, and how many break the block.
-export const BlockDamage = trait({ hits: 0, hitsToBreak: 3 })
+export const BlockDamage = trait({ hits: 0, hitsToBreak: 3 });
 ```
 
 In `block/actions.ts`, import it and give every new block a damage counter.
 
 ```ts
-import { Block, BlockDamage } from './traits'
+import { Block, BlockDamage } from './traits';
 ```
 
 ```ts
-return world.spawn(Block, BlockDamage, Position(snapped), BoxCollider)
+return world.spawn(Block, BlockDamage, Position(snapped), BoxCollider);
 ```
 
 ## 2. Model a swing
@@ -28,36 +28,36 @@ return world.spawn(Block, BlockDamage, Position(snapped), BoxCollider)
 Create `item/traits.ts`:
 
 ```ts
-import { trait } from 'koota'
+import { trait } from 'koota';
 
 // Duration of one tool swing, in seconds.
-export const ToolSwing = trait({ duration: 0.3 })
+export const ToolSwing = trait({ duration: 0.3 });
 ```
 
 Create `item/actions.ts`. One action does both jobs: it swings the tool and damages the block.
 
 ```ts
-import { createActions, type Entity } from 'koota'
-import { BlockDamage } from '../block/traits'
-import { Player } from '../player/traits'
-import { ToolSwing } from './traits'
+import { createActions, type Entity } from 'koota';
+import { BlockDamage } from '../block/traits';
+import { Player } from '../player/traits';
+import { ToolSwing } from './traits';
 
 export const itemActions = createActions((world) => ({
   // Swings the player's tool at a block. Each hit adds damage, and the last one breaks it.
   hitBlock: (block: Entity) => {
-    const player = world.queryFirst(Player)
-    const damage = block.get(BlockDamage)
-    if (!player || !damage) return
+    const player = world.queryFirst(Player);
+    const damage = block.get(BlockDamage);
+    if (!player || !damage) return;
 
     // Removing and adding again restarts the swing and tells onAdd subscribers.
-    player.remove(ToolSwing)
-    player.add(ToolSwing)
+    player.remove(ToolSwing);
+    player.add(ToolSwing);
 
-    const hits = damage.hits + 1
-    if (hits >= damage.hitsToBreak) block.destroy()
-    else block.set(BlockDamage, { ...damage, hits })
+    const hits = damage.hits + 1;
+    if (hits >= damage.hitsToBreak) block.destroy();
+    else block.set(BlockDamage, { ...damage, hits });
   },
-}))
+}));
 ```
 
 Adding `ToolSwing` notifies subscribers and supplies the swing duration. Removing and adding it again lets repeated hits trigger new swings. The trait remains after the animation ends, so it does not mean the player is currently swinging.
@@ -67,9 +67,9 @@ Adding `ToolSwing` notifies subscribers and supplies the swing duration. Removin
 Add it to `actions.ts`:
 
 ```ts
-import { groundActions } from './ground/actions'
-import { itemActions } from './item/actions' // <--
-import { playerActions } from './player/actions'
+import { groundActions } from './ground/actions';
+import { itemActions } from './item/actions'; // <--
+import { playerActions } from './player/actions';
 ```
 
 ```ts
@@ -83,30 +83,30 @@ import { playerActions } from './player/actions'
 In `block/renderer.tsx`, import the item actions and the damage trait.
 
 ```tsx
-import { itemActions } from '../item/actions' // <--
-import { Position } from '../transform/traits'
-import { blockActions } from './actions'
-import { Block, BlockDamage } from './traits' // <--
+import { itemActions } from '../item/actions'; // <--
+import { Position } from '../transform/traits';
+import { blockActions } from './actions';
+import { Block, BlockDamage } from './traits'; // <--
 ```
 
 Inside `BlockView`, read the action and the damage, and add a handler for the left button.
 
 ```tsx
-const { placeBlock } = useActions(blockActions)
-const { hitBlock } = useActions(itemActions) // <--
-const position = useTrait(entity, Position)
-const damage = useTrait(entity, BlockDamage) // <--
-const texture = useTexture('/dirt.jpg')
+const { placeBlock } = useActions(blockActions);
+const { hitBlock } = useActions(itemActions); // <--
+const position = useTrait(entity, Position);
+const damage = useTrait(entity, BlockDamage); // <--
+const texture = useTexture('/dirt.jpg');
 // Darkens as the block takes hits.
-const brightness = damage ? 1 - 0.6 * (damage.hits / damage.hitsToBreak) : 1 // <--
+const brightness = damage ? 1 - 0.6 * (damage.hits / damage.hitsToBreak) : 1; // <--
 
 // Left click hits the block with the tool in hand.
 const handleHit = (event: ThreeEvent<PointerEvent>) => {
-  if (event.button !== 0) return
+  if (event.button !== 0) return;
 
-  event.stopPropagation()
-  hitBlock(entity)
-}
+  event.stopPropagation();
+  hitBlock(entity);
+};
 ```
 
 Attach it, and tint the block by its damage.
@@ -131,13 +131,13 @@ Try three left clicks on a block. It should darken on the first two and disappea
 Create `item/renderer.tsx`. The axe hangs from the character's right arm, so it swings with the animation.
 
 ```tsx
-import { useGLTF } from '@react-three/drei/webgpu'
-import { useMemo } from 'react'
-import { Mesh } from 'three/webgpu'
+import { useGLTF } from '@react-three/drei/webgpu';
+import { useMemo } from 'react';
+import { Mesh } from 'three/webgpu';
 
 // Minecraft Diamond Axe by Blender3D, licensed CC BY 4.0
 // https://sketchfab.com/3d-models/minecraft-diamond-axe-0d62f4d3676545c88ec8523213c055dd
-const AXE_URL = '/axe.glb'
+const AXE_URL = '/axe.glb';
 
 // Hangs from the character's right arm joint, gripped the way Minecraft holds a tool.
 export function HeldAxe() {
@@ -147,24 +147,24 @@ export function HeldAxe() {
         <Axe />
       </group>
     </group>
-  )
+  );
 }
 
 function Axe() {
-  const { scene } = useGLTF(AXE_URL)
+  const { scene } = useGLTF(AXE_URL);
   // The loaded scene is shared, so each hand gets its own copy of the object tree.
   const model = useMemo(() => {
-    const copy = scene.clone()
+    const copy = scene.clone();
     copy.traverse((object) => {
-      if (object instanceof Mesh) object.castShadow = true
-    })
-    return copy
-  }, [scene])
+      if (object instanceof Mesh) object.castShadow = true;
+    });
+    return copy;
+  }, [scene]);
 
-  return <primitive object={model} />
+  return <primitive object={model} />;
 }
 
-useGLTF.preload(AXE_URL)
+useGLTF.preload(AXE_URL);
 ```
 
 The axe has no skeleton, so a plain `clone` is enough. The numbers on the groups were found by hand.
@@ -172,10 +172,10 @@ The axe has no skeleton, so a plain `clone` is enough. The numbers on the groups
 In `player/renderer.tsx`, add `createPortal`, `useWorld`, `AnimationUtils`, `LoopOnce` and the two item imports.
 
 ```tsx
-import { createPortal, useFrame } from '@react-three/fiber/webgpu' // <--
-import type { Entity } from 'koota'
-import { useQuery, useTag, useTrait, useWorld } from 'koota/react' // <--
-import { useEffect, useMemo, useRef } from 'react'
+import { createPortal, useFrame } from '@react-three/fiber/webgpu'; // <--
+import type { Entity } from 'koota';
+import { useQuery, useTag, useTrait, useWorld } from 'koota/react'; // <--
+import { useEffect, useMemo, useRef } from 'react';
 import {
   type AnimationAction,
   type AnimationClip,
@@ -186,18 +186,18 @@ import {
   Mesh,
   type Object3D,
   Vector3,
-} from 'three/webgpu'
-import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js'
-import { IsWalking } from '../character/traits'
-import { HeldAxe } from '../item/renderer' // <--
-import { ToolSwing } from '../item/traits' // <--
+} from 'three/webgpu';
+import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { IsWalking } from '../character/traits';
+import { HeldAxe } from '../item/renderer'; // <--
+import { ToolSwing } from '../item/traits'; // <--
 ```
 
 Inside `PlayerView`, find the arm bone and portal the axe into it.
 
 ```tsx
-const rotation = useTrait(entity, Rotation)
-const rightArm = useMemo(() => model.getObjectByName('RightArm'), [model]) // <--
+const rotation = useTrait(entity, Rotation);
+const rightArm = useMemo(() => model.getObjectByName('RightArm'), [model]); // <--
 ```
 
 ```tsx
@@ -214,7 +214,7 @@ const rightArm = useMemo(() => model.getObjectByName('RightArm'), [model]) // <-
 The model has a `tool_swing` clip. Played on its own it would replace the walk. Made additive, it layers on top of whatever is playing. At the top of `useCharacterAnimation`, replace the `useAnimations` line:
 
 ```tsx
-const world = useWorld()
+const world = useWorld();
 // The swing is additive so it layers over whichever clip is playing.
 const clips = useMemo(
   () =>
@@ -222,8 +222,8 @@ const clips = useMemo(
       clip.name === 'tool_swing' ? AnimationUtils.makeClipAdditive(clip.clone()) : clip
     ),
   [animations]
-)
-const { actions } = useAnimations(clips, model)
+);
+const { actions } = useAnimations(clips, model);
 ```
 
 Before the stride `useFrame`, subscribe to the swing.
@@ -231,16 +231,16 @@ Before the stride `useFrame`, subscribe to the swing.
 ```tsx
 // Swing once each time a ToolSwing is added to this entity.
 useEffect(() => {
-  const swing = actions.tool_swing
-  if (!swing) return
+  const swing = actions.tool_swing;
+  if (!swing) return;
 
   return world.onAdd(ToolSwing, (swinging) => {
-    if (swinging !== entity) return
+    if (swinging !== entity) return;
 
-    const { duration } = swinging.get(ToolSwing)!
-    swing.reset().setLoop(LoopOnce, 1).setDuration(duration).play()
-  })
-}, [actions, entity, world])
+    const { duration } = swinging.get(ToolSwing)!;
+    swing.reset().setLoop(LoopOnce, 1).setDuration(duration).play();
+  });
+}, [actions, entity, world]);
 ```
 
 `world.onAdd` fires when `ToolSwing` is added. The callback checks the entity so only this player's animation plays. It returns an unsubscribe function for effect cleanup. The frame loop keeps handling movement while the subscription starts each swing.

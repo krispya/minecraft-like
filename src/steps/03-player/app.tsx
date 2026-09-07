@@ -10,7 +10,7 @@ import { world } from './world';
 export function App() {
   return (
     <WorldProvider world={world}>
-      <Canvas shadows camera={{ position: [4, 3, 6], fov: 45 }}>
+      <Canvas shadows camera={{ position: [4, 1.5, 6], fov: 45 }}>
         <Sky sunPosition={[100, 20, 100]} />
         <ambientLight intensity={0.3 * Math.PI} />
         <Sun />
