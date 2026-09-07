@@ -176,21 +176,20 @@ import { useAnimations, useGLTF } from '@react-three/drei/webgpu';
 import { createPortal, useFrame } from '@react-three/fiber/webgpu'; // <--
 import type { Entity } from 'koota';
 import { useQuery, useTag, useTrait, useTraitEffect, useWorld } from 'koota/react'; // <--
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import {
   type AnimationAction,
   type AnimationClip,
   AnimationUtils,
   Box3,
+  type Group,
   LoopOnce,
   MathUtils,
   Mesh,
   type Object3D,
-  type QuaternionTuple,
   Vector3,
-  type Vector3Tuple,
 } from 'three/webgpu';
-import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { IsWalking } from '../character/traits';
 import { HeldAxe } from '../item/renderer'; // <--
 import { ToolSwing } from '../item/traits'; // <--
@@ -202,12 +201,14 @@ import { Player } from './traits';
 Inside `PlayerView`, find the arm bone and portal the axe into it.
 
 ```tsx
-useTraitEffect(entity, Rotation, (value) => setRotation(value?.toArray()));
+useTraitEffect(entity, Rotation, (rotation) => {
+  if (rotation) group.current?.quaternion.copy(rotation);
+});
 const rightArm = useMemo(() => model.getObjectByName('RightArm'), [model]); // <--
 ```
 
 ```tsx
-<group position={position} quaternion={rotation}>
+<group ref={group}>
   <primitive object={model} position={modelOffset} />
   {rightArm && createPortal(<HeldAxe />, rightArm, { injectScene: false })}
 </group>

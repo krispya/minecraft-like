@@ -80,8 +80,8 @@ Create `player/renderer.tsx`. A **query** finds every entity that has a set of t
 ```tsx
 import type { Entity } from 'koota';
 import { useQuery, useTraitEffect } from 'koota/react';
-import { useState } from 'react';
-import { type Vector3Tuple } from 'three/webgpu';
+import { useRef } from 'react';
+import type { Mesh } from 'three/webgpu';
 import { Position } from '../transform/traits';
 import { Player } from './traits';
 
@@ -92,11 +92,13 @@ export function PlayerRenderer() {
 
 // A stand-in for the player, two units tall like a Minecraft character.
 function PlayerView({ entity }: { entity: Entity }) {
-  const [position, setPosition] = useState<Vector3Tuple>();
-  useTraitEffect(entity, Position, (value) => setPosition(value?.toArray()));
+  const mesh = useRef<Mesh>(null);
+  useTraitEffect(entity, Position, (position) => {
+    if (position) mesh.current?.position.copy(position);
+  });
 
   return (
-    <mesh castShadow position={position}>
+    <mesh ref={mesh} castShadow>
       <capsuleGeometry args={[0.3, 1.4, 4, 16]} />
       <meshStandardMaterial color="hotpink" />
     </mesh>
@@ -104,9 +106,9 @@ function PlayerView({ entity }: { entity: Entity }) {
 }
 ```
 
-`useQuery` subscribes to which entities match, so a player that spawns or dies appears or disappears. Each `PlayerView` subscribes to its own `Position` with `useTraitEffect`, which calls back whenever the value changes.
+`useQuery` subscribes to which entities match, so a player that spawns or dies appears or disappears. Each `PlayerView` subscribes to its own `Position` with `useTraitEffect`, which calls back whenever the value changes, and copies it straight into the mesh through a ref.
 
-The callback copies the vector into a plain array in React state. `Position` is one `Vector3` that systems will mutate in place every tick, and React expects a new value each time something changes. The React Compiler in particular caches anything derived from a value until that value is replaced, so the view keeps a copy rather than the live object. This is the pattern for every renderer from here on: a query for the entities, a view per entity, and a copy of each trait it draws.
+`Position` is one `Vector3` that systems will mutate in place every tick. Copying it into the Three object skips React entirely: no state, no render, just the mesh moving. That matters twice over. React only notices a change when it is handed a new value, and the React Compiler caches anything derived from a value until it is replaced, so a live object changing underneath a prop would freeze on screen. This is the pattern for every renderer from here on: a query for the entities, a view per entity, and a ref for whatever moves.
 
 In `app.tsx`, import the renderer and add it inside the Canvas after `<Sun />`.
 

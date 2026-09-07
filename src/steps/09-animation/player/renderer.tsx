@@ -2,19 +2,18 @@ import { useAnimations, useGLTF } from '@react-three/drei/webgpu';
 import { useFrame } from '@react-three/fiber/webgpu';
 import type { Entity } from 'koota';
 import { useQuery, useTag, useTrait, useTraitEffect } from 'koota/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import {
   type AnimationAction,
   type AnimationClip,
   Box3,
+  type Group,
   MathUtils,
   Mesh,
   type Object3D,
-  type QuaternionTuple,
   Vector3,
-  type Vector3Tuple,
 } from 'three/webgpu';
-import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { IsWalking } from '../character/traits';
 import { BoxCollider, Velocity } from '../physics/traits';
 import { Position, Rotation } from '../transform/traits';
@@ -44,10 +43,13 @@ function PlayerView({ entity }: { entity: Entity }) {
     return [-center.x, -bounds.min.y - (box?.size.y ?? 0) / 2, -center.z] as const;
   }, [box, model]);
 
-  const [position, setPosition] = useState<Vector3Tuple>();
-  useTraitEffect(entity, Position, (value) => setPosition(value?.toArray()));
-  const [rotation, setRotation] = useState<QuaternionTuple>();
-  useTraitEffect(entity, Rotation, (value) => setRotation(value?.toArray()));
+  const group = useRef<Group>(null);
+  useTraitEffect(entity, Position, (position) => {
+    if (position) group.current?.position.copy(position);
+  });
+  useTraitEffect(entity, Rotation, (rotation) => {
+    if (rotation) group.current?.quaternion.copy(rotation);
+  });
 
   useCharacterAnimation(entity, animations, model);
 
@@ -61,7 +63,7 @@ function PlayerView({ entity }: { entity: Entity }) {
   }, [model]);
 
   return (
-    <group position={position} quaternion={rotation}>
+    <group ref={group}>
       <primitive object={model} position={modelOffset} />
     </group>
   );
