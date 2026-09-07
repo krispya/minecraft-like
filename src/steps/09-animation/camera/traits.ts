@@ -8,7 +8,7 @@ export const Follows = relation({ exclusive: true });
 export const OrbitController = trait({
   // Where the camera sits relative to the target: how far away, how far down from straight up,
   // and how far around.
-  spherical: () => new Spherical(4, Math.PI / 2.4, 0),
+  spherical: () => new Spherical(4, Math.PI / 3, 0),
   target: () => new Vector3(),
   minDistance: 2,
   maxDistance: 8,

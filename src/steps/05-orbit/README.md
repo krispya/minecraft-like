@@ -131,14 +131,14 @@ export const Camera = trait();
 export const OrbitController = trait({
   // Where the camera sits relative to the target: how far away, how far down from straight up,
   // and how far around.
-  spherical: () => new Spherical(4, Math.PI / 2.4, 0),
+  spherical: () => new Spherical(4, Math.PI / 3, 0),
   target: () => new Vector3(),
   minDistance: 2,
   maxDistance: 8,
 });
 ```
 
-`OrbitController` holds the orbit settings. The systems below apply them to any entity with the required traits.
+`OrbitController` holds the orbit settings. The camera starts 4 units from the target, looking down at 30 degrees. The systems below apply these settings to any entity with the required traits.
 
 In `camera/actions.ts`, the controller now decides where the camera sits, so `spawnCamera` no longer builds a rotation. Replace it:
 

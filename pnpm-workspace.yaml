@@ -4,4 +4,5 @@ allowBuilds:
   esbuild: true
 
 minimumReleaseAgeExclude:
-  - koota@0.6.6-canary.385cdc6
+  - koota@0.6.6-canary.385cdc6 || 0.6.6-canary.d0f96fd
+  - '@react-three/fiber@10.0.0-canary.0ea97c0 || 10.0.0-canary.4f316e6'

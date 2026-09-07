@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@react-three/drei": "11.0.0-alpha.7",
-    "@react-three/fiber": "10.0.0-canary.c385e9f",
-    "koota": "0.6.6-canary.385cdc6",
+    "@react-three/fiber": "10.0.0-canary.0ea97c0",
+    "koota": "0.6.6-canary.d0f96fd",
     "math": "1.0.0-canary-37519dcd-20260903",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

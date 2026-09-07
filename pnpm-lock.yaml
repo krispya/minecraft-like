@@ -10,13 +10,13 @@ importers:
     dependencies:
       '@react-three/drei':
         specifier: 11.0.0-alpha.7
-        version: 11.0.0-alpha.7(@react-three/fiber@10.0.0-canary.c385e9f(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1))(@types/react@19.2.18)(@types/three@0.185.4)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1)
+        version: 11.0.0-alpha.7(@react-three/fiber@10.0.0-canary.0ea97c0(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1))(@types/react@19.2.18)(@types/three@0.185.4)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1)
       '@react-three/fiber':
-        specifier: 10.0.0-canary.c385e9f
-        version: 10.0.0-canary.c385e9f(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1)
+        specifier: 10.0.0-canary.0ea97c0
+        version: 10.0.0-canary.0ea97c0(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1)
       koota:
-        specifier: 0.6.6-canary.385cdc6
-        version: 0.6.6-canary.385cdc6(@types/react@19.2.18)(react@19.2.8)
+        specifier: 0.6.6-canary.d0f96fd
+        version: 0.6.6-canary.d0f96fd(@types/react@19.2.18)(react@19.2.8)
       math:
         specifier: 1.0.0-canary-37519dcd-20260903
         version: 1.0.0-canary-37519dcd-20260903
@@ -255,8 +255,8 @@ packages:
       react-dom:
         optional: true
 
-  '@react-three/fiber@10.0.0-canary.c385e9f':
-    resolution: {integrity: sha512-jRRaxfocLB+LfEeNOLQ5+s8ww+qJ649Di0z1ZYTHKcirFzuHkQaGiG6IR+oJYy0RdHYrgZB6ypf6gEAOl44IMg==}
+  '@react-three/fiber@10.0.0-canary.0ea97c0':
+    resolution: {integrity: sha512-7VziLRABI1+Pxv35cnHptPLUpPRZ5YD9emor8qnmEdTjmUkxu4QyrXtpl6N/Pq8AfLX7mtZ3Cm0pM7J325JelA==}
     peerDependencies:
       react: '>=19.0 <19.3'
       react-dom: '>=19.0 <19.3'
@@ -596,8 +596,8 @@ packages:
     peerDependencies:
       react: ^19.0.0
 
-  koota@0.6.6-canary.385cdc6:
-    resolution: {integrity: sha512-G0C8UaDnB/WD2ApLt8eR5ApOdmLWvQZq9NNHvzSnfv13B1Se/6jDKw7I4tc4SEFU9uSMKvcGSJOmOIgIUKEYZA==}
+  koota@0.6.6-canary.d0f96fd:
+    resolution: {integrity: sha512-6oURy1KNYuP43rJRVsy9xcty88zu3OnBzJLib7GzcQgyd7Oyrdu2ZzWyb1hXmSgH3eO6kEcZNwdaXygcXaFH2g==}
     peerDependencies:
       '@types/react': '>=18.0.0'
       react: '>=18.0.0'
@@ -1029,12 +1029,12 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@react-three/drei@11.0.0-alpha.7(@react-three/fiber@10.0.0-canary.c385e9f(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1))(@types/react@19.2.18)(@types/three@0.185.4)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1)':
+  '@react-three/drei@11.0.0-alpha.7(@react-three/fiber@10.0.0-canary.0ea97c0(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1))(@types/react@19.2.18)(@types/three@0.185.4)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1)':
     dependencies:
       '@babel/runtime': 7.29.7
       '@mediapipe/tasks-vision': 0.10.17
       '@monogrid/gainmap-js': 3.4.0(three@0.185.1)
-      '@react-three/fiber': 10.0.0-canary.c385e9f(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1)
+      '@react-three/fiber': 10.0.0-canary.0ea97c0(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1)
       '@use-gesture/react': 10.3.1(react@19.2.8)
       camera-controls: 3.1.2(three@0.185.1)
       cross-env: 7.0.3
@@ -1060,7 +1060,7 @@ snapshots:
       - '@types/three'
       - immer
 
-  '@react-three/fiber@10.0.0-canary.c385e9f(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1)':
+  '@react-three/fiber@10.0.0-canary.0ea97c0(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(three@0.185.1)':
     dependencies:
       '@babel/runtime': 7.29.7
       '@monogrid/gainmap-js': 3.4.0(three@0.185.1)
@@ -1281,7 +1281,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
 
-  koota@0.6.6-canary.385cdc6(@types/react@19.2.18)(react@19.2.8):
+  koota@0.6.6-canary.d0f96fd(@types/react@19.2.18)(react@19.2.8):
     optionalDependencies:
       '@types/react': 19.2.18
       react: 19.2.8

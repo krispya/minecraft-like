@@ -16,7 +16,7 @@ function CameraView({ entity }: { entity: Entity }) {
   return (
     <PerspectiveCamera
       makeDefault
-      fov={45}
+      fov={70}
       position={position?.toArray()}
       quaternion={rotation?.toArray()}
     />

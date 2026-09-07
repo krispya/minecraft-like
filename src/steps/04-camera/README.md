@@ -93,7 +93,7 @@ function CameraView({ entity }: { entity: Entity }) {
   return (
     <PerspectiveCamera
       makeDefault
-      fov={45}
+      fov={70}
       position={position?.toArray()}
       quaternion={rotation?.toArray()}
     />
@@ -101,7 +101,7 @@ function CameraView({ entity }: { entity: Entity }) {
 }
 ```
 
-`makeDefault` tells Fiber to draw the scene through this camera.
+`makeDefault` tells Fiber to draw the scene through this camera. The field of view is wider than the Canvas default, closer to Minecraft's. `toArray` copies the vectors into plain arrays, since props should be values rather than objects the simulation keeps mutating.
 
 In `app.tsx`, import the renderer, drop the `camera` prop from the Canvas, and add the renderer to the scene.
 
