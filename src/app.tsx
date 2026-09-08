@@ -2,6 +2,7 @@ import { Sky } from '@react-three/drei/webgpu';
 import { Canvas, useFrame } from '@react-three/fiber/webgpu';
 import { useActions, useQueryFirst, useTrait, useWorld } from 'koota/react';
 import { useEffect, useRef } from 'react';
+import { output, vec4 } from 'three/tsl';
 import { type DirectionalLight, Vector3 } from 'three/webgpu';
 import { actions } from './actions';
 import { Frameloop } from './frameloop';
@@ -27,7 +28,10 @@ export function App() {
   return (
     <>
       <Canvas shadows camera={{ fov: 45 }}>
-        <Sky sunPosition={[100, 20, 100]} />
+        <Sky
+          sunPosition={[100, 20, 100]}
+          material-outputNode={vec4(output.rgb.pow(1 / 2.4), output.a)}
+        />
         <ambientLight intensity={0.3 * Math.PI} />
         <Sun />
 
