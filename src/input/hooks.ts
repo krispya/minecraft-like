@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { actions } from '../actions';
 import { Player } from '../character/player/traits';
 import type { ItemKind } from '../item/traits';
-import { Position } from '../transform/traits';
+import { Position } from '../transform';
 import { Keys, Pointer, Wheel } from './traits';
 
 // Number keys pick the item in hand, like Minecraft's hotbar.

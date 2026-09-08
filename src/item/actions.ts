@@ -4,7 +4,7 @@ import { blockActions } from '../block/actions';
 import { Block, BlockDamage } from '../block/traits';
 import { PlaneCollider } from '../physics/traits';
 import { Player } from '../character/player/traits';
-import { Position } from '../transform/traits';
+import { Position } from '../transform';
 import {
   BlockInteraction,
   CarriedBy,

@@ -4,7 +4,7 @@ import { HITS_TO_BREAK, isSolidBlock } from '../block/kinds';
 import { Block, BlockDamage, BlockKind, Blocks } from '../block/traits';
 import { BoxCollider } from '../physics/traits';
 import { Time } from '../time/traits';
-import { Position } from '../transform/traits';
+import { Position } from '../transform';
 import { Construction, Reveal, Terrain } from './traits';
 
 // Seconds ahead of its cue a block is spawned or an old block removed.

@@ -3,7 +3,7 @@ import { Quaternion, Vector3 } from 'three';
 import { Camera, Follows, IsFirstPerson } from '../camera/traits';
 import { IsGrounded, Velocity } from '../physics/traits';
 import { Time } from '../time/traits';
-import { Position, Rotation } from '../transform/traits';
+import { Position, Rotation } from '../transform';
 
 export const CharacterController = trait({
   maxSpeed: 5,

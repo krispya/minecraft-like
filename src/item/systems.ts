@@ -1,7 +1,7 @@
 import type { World } from 'koota';
 import { Pointer } from '../input/traits';
 import { Time } from '../time/traits';
-import { Position } from '../transform/traits';
+import { Position } from '../transform';
 import { itemActions } from './actions';
 import { Mining, ToolSwing } from './traits';
 

@@ -1,11 +1,12 @@
 import { useTexture } from '@react-three/drei/webgpu';
 import type { ThreeEvent } from '@react-three/fiber/webgpu';
 import { Entity } from 'koota';
-import { useActions, useQueryFirst, useTrait } from 'koota/react';
+import { useActions, useQueryFirst } from 'koota/react';
 import { RepeatWrapping } from 'three/webgpu';
 import grassImg from '../../assets/grass.jpg';
 import { itemActions } from '../../item/actions';
-import { Position } from '../../transform/traits';
+import { Position } from '../../transform';
+import { captureRef } from '../../view/capture-ref';
 import { Ground } from './traits';
 
 export function GroundRenderer() {
@@ -17,7 +18,6 @@ function GroundView({ entity }: { entity: Entity }) {
   const { interactWith } = useActions(itemActions);
   const texture = useTexture(grassImg);
   texture.wrapS = texture.wrapT = RepeatWrapping;
-  const position = useTrait(entity, Position);
 
   const handlePointerDown = (event: ThreeEvent<PointerEvent>) => {
     if (event.button !== 0 || !event.face) return;
@@ -29,7 +29,7 @@ function GroundView({ entity }: { entity: Entity }) {
   return (
     <mesh
       receiveShadow
-      position={position?.toArray()}
+      ref={captureRef(entity)}
       rotation-x={-Math.PI / 2}
       onPointerDown={handlePointerDown}
     >

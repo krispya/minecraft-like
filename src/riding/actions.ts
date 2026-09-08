@@ -5,7 +5,7 @@ import { CharacterController, Input } from '../controllers/characterController';
 import { BoxCollider, IsGrounded, Velocity } from '../physics/traits';
 import { PLAYER_COLLIDER_SIZE } from '../character/player/actions';
 import { Player } from '../character/player/traits';
-import { Position } from '../transform/traits';
+import { Position } from '../transform';
 import { Rideable, Rides } from './traits';
 
 // How close a mount has to be to climb on.

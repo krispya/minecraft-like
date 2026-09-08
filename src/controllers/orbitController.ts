@@ -3,7 +3,7 @@ import { MathUtils, Matrix4, Spherical, Vector3 } from 'three';
 import { Follows, IsThirdPerson } from '../camera/traits';
 import { Pointer, Wheel } from '../input/traits';
 import { Time } from '../time/traits';
-import { Position, Rotation } from '../transform/traits';
+import { Position, Rotation } from '../transform';
 
 export const OrbitController = trait({
   // Offset from the target.

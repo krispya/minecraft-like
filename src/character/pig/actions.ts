@@ -6,7 +6,7 @@ import { IsIdle } from '../stateMachine';
 import { Wander } from '../wander';
 import { BoxCollider, Velocity } from '../../physics/traits';
 import { Rideable } from '../../riding/traits';
-import { Position, Rotation } from '../../transform/traits';
+import { Position, Rotation } from '../../transform';
 import { Pig } from './traits';
 
 export const pigActions = createActions((world) => {

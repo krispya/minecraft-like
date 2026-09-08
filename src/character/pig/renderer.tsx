@@ -1,14 +1,15 @@
 import { useAnimations, useGLTF } from '@react-three/drei/webgpu';
 import { useFrame } from '@react-three/fiber/webgpu';
 import { Entity } from 'koota';
-import { useQuery, useTag, useTrait, useTraitEffect } from 'koota/react';
-import { useEffect, useMemo, useRef } from 'react';
+import { useQuery, useTag, useTrait } from 'koota/react';
+import { useEffect, useMemo } from 'react';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import { Box3, type Group, Mesh, Vector3 } from 'three/webgpu';
+import { Box3, Mesh, Vector3 } from 'three/webgpu';
 import pigUrl from '../../assets/minecraft-saddled-pig/source/model.gltf?url';
 import { BoxColliderDebug } from '../../physics/renderer';
 import { BoxCollider, Velocity } from '../../physics/traits';
-import { Position, Rotation } from '../../transform/traits';
+import { Position } from '../../transform';
+import { captureRef } from '../../view/capture-ref';
 import { IsWalking } from '../stateMachine';
 import { Pig } from './traits';
 
@@ -31,14 +32,6 @@ function PigView({ entity }: { entity: Entity }) {
     return [-center.x, -bounds.min.y - (box?.size.y ?? 0) / 2, -center.z] as const;
   }, [box, model]);
 
-  const group = useRef<Group>(null);
-  useTraitEffect(entity, Position, (position) => {
-    if (position) group.current?.position.copy(position);
-  });
-  useTraitEffect(entity, Rotation, (rotation) => {
-    if (rotation) group.current?.quaternion.copy(rotation);
-  });
-
   usePigAnimation(entity, animations, model);
 
   useEffect(() => {
@@ -52,7 +45,7 @@ function PigView({ entity }: { entity: Entity }) {
 
   return (
     <>
-      <group ref={group}>
+      <group ref={captureRef(entity)}>
         <primitive object={model} position={modelOffset} />
       </group>
       <BoxColliderDebug entity={entity} />

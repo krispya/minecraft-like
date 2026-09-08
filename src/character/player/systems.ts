@@ -3,7 +3,7 @@ import { Vector3 } from 'three';
 import { Camera, Follows } from '../../camera/traits';
 import { Input } from '../../controllers/characterController';
 import { Keys } from '../../input/traits';
-import { Rotation } from '../../transform/traits';
+import { Rotation } from '../../transform';
 import { Player } from './traits';
 
 const UP = new Vector3(0, 1, 0);

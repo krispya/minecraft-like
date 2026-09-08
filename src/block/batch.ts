@@ -13,7 +13,7 @@ import {
 } from 'three/webgpu';
 import { BoxCollider } from '../physics/traits';
 import { Reveal } from '../terrain/traits';
-import { Position } from '../transform/traits';
+import { Position } from '../transform';
 import { onAllAdded } from '../utils/on-all-added';
 import type { BlockGrid } from './grid';
 import { BLOCK_KINDS, isSolidBlock } from './kinds';

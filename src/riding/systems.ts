@@ -3,7 +3,7 @@ import { Vector3 } from 'three';
 import { Camera, Follows, IsFirstPerson } from '../camera/traits';
 import { Input } from '../controllers/characterController';
 import { Player } from '../character/player/traits';
-import { Position, Rotation } from '../transform/traits';
+import { Position, Rotation } from '../transform';
 import { ridingActions } from './actions';
 import { Rideable, Rides } from './traits';
 

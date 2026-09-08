@@ -13,7 +13,9 @@ This project uses [Vite](https://vitejs.dev/) as the bundler for fast developmen
 
 ### Domains
 
-`src/` is split by domain, one folder per concept: `transform`, `physics`, `input`, `time`, `character`, `riding`, `camera`, `block`, `terrain`, `item`. Each folder holds everything about its concept:
+`src/transform.ts` holds the shared `Position`, `Rotation`, and `Scale` traits. Small shared modules live at the root so these basic building blocks are easy to find.
+
+Domains have their own folders: `physics`, `input`, `time`, `character`, `riding`, `camera`, `block`, `terrain`, `item`, and `view`. Each folder holds the files its concept needs:
 
 - `traits.ts` is the data, the domain's public vocabulary
 - `actions.ts` is how the data is changed, the domain's public API
@@ -21,11 +23,23 @@ This project uses [Vite](https://vitejs.dev/) as the bundler for fast developmen
 - `renderer.tsx` reflects the data into React Three Fiber
 - other files provide helpers, like `block/grid.ts` or `terrain/noise.ts`
 
-Domains may import each other's traits and actions. Systems and renderers are private to their domain. The core stays headless: React appears only in renderers and in the input hooks that feed the world.
+Domains may import each other's traits and actions. Systems and renderers are wired together by the app. The simulation stays headless: its traits, actions, and systems do not depend on React or mounted objects.
 
 `controllers/` groups the headless behavior modules `orbitController.ts`, `firstPersonController.ts`, and `characterController.ts`. Each module owns its controller traits and the systems that drive them. `camera/` owns shared follow and perspective traits, camera spawning, and perspective switching. `character/` groups shared character behavior and the player and pig implementations. `stateMachine.ts` contains movement state traits, transitions, and state updates. `wander.ts` contains wandering traits and the input system. `player/` and `pig/` each retain their spawning, traits, and rendering code, with player input in `player/systems.ts`.
 
 `terrain/` groups the permanent ground plane and generated block terrain. `ground/` contains the plane's trait, spawn action, and renderer. Terrain generation stays in the parent directory, and generated blocks use the shared block renderer.
+
+### View sync
+
+The simulation owns transforms. `view/` copies them into mounted Three objects once per frame, so direct mutations are visible without React subscriptions.
+
+1. A renderer uses `ref={captureRef(entity)}` to store its root object in the view-only `Ref` trait.
+2. `Frameloop` runs `syncTransforms(world)` after all simulation updates. It copies each available `Position`, `Rotation`, and `Scale` into that object.
+3. React's ref cleanup removes the captured object on unmount. Cleanup is safe when an entity has already been destroyed or another object has replaced the ref.
+
+Capture the outer group to preserve model offsets and animation inside it. Debug colliders use `captureRef(entity, ColliderDebugRef)` so they follow position while keeping their world-aligned shape. Instanced blocks keep their batch renderer, and held-item animations keep their local refs.
+
+Keep `Ref` out of spawning and simulation code. An entity can run without a mounted view.
 
 ## Libraries
 
@@ -48,4 +62,4 @@ The following libraries are used - checkout the linked docs to learn more
 - `pnpm install` to install the dependencies
 - `pnpm run dev` to run the development server and preview the app with live updates
 - `pnpm run build` to build the app into the `dist` folder
-- `pnpm run test` to run the tests
+- `node --test tests/view-sync.test.mjs` to run the view sync tests

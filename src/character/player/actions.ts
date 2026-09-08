@@ -4,7 +4,7 @@ import { CharacterController, Input } from '../../controllers/characterControlle
 import { IsIdle } from '../stateMachine';
 import { BlockInteraction } from '../../item/traits';
 import { BoxCollider, Velocity } from '../../physics/traits';
-import { Position, Rotation } from '../../transform/traits';
+import { Position, Rotation } from '../../transform';
 import { Player } from './traits';
 
 export const PLAYER_COLLIDER_SIZE = new Vector3(0.6, 2, 0.6);

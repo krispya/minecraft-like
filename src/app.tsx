@@ -14,7 +14,7 @@ import { OrbitController } from './controllers/orbitController';
 import { Keys } from './input/traits';
 import { Pig } from './character/pig/traits';
 import { Player } from './character/player/traits';
-import { Position } from './transform/traits';
+import { Position } from './transform';
 import { Time } from './time/traits';
 
 import { BlockRenderer } from './block/renderer';

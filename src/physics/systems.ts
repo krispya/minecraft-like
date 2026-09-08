@@ -3,7 +3,7 @@ import type { Vector3 } from 'three';
 import { Block, Blocks } from '../block/traits';
 import { IsRiding } from '../character/stateMachine';
 import { Time } from '../time/traits';
-import { Position } from '../transform/traits';
+import { Position } from '../transform';
 import { BoxCollider, DynamicBody, IsGrounded, PlaneCollider, Velocity } from './traits';
 
 const GRAVITY = -9.81;

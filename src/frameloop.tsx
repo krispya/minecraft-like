@@ -25,6 +25,7 @@ import { updatePlayerInput } from './character/player/systems';
 import { updateMountInput, updateMounting, updateRiders } from './riding/systems';
 import { updateConstruction, updateReveal } from './terrain/systems';
 import { updateTime } from './time/systems';
+import { syncTransforms } from './view/systems';
 
 // The tick. Every domain's systems run here in one global order, since the order is a property of
 // the whole app and no domain can own it.
@@ -66,6 +67,7 @@ export function Frameloop() {
       applyFirstPerson(world);
 
       resetInputDelta(world);
+      syncTransforms(world);
     },
     { before: 'update' }
   );

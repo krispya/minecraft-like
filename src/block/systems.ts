@@ -1,5 +1,5 @@
 import type { World } from 'koota';
-import { Position } from '../transform/traits';
+import { Position } from '../transform';
 import { onAllAdded } from '../utils/on-all-added';
 import { Block, Blocks } from './traits';
 

@@ -2,7 +2,7 @@ import type { World } from 'koota';
 import { Euler, MathUtils } from 'three';
 import { FirstPersonController } from '../controllers/firstPersonController';
 import { OrbitController } from '../controllers/orbitController';
-import { Rotation } from '../transform/traits';
+import { Rotation } from '../transform';
 import { Follows, IsFirstPerson } from './traits';
 
 export function subscribeCameraControllerSwap(world: World) {

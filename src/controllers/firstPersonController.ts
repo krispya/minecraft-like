@@ -2,7 +2,7 @@ import { trait, type World } from 'koota';
 import { Euler, MathUtils, Vector3 } from 'three';
 import { Camera, Follows, IsFirstPerson } from '../camera/traits';
 import { Pointer } from '../input/traits';
-import { Position, Rotation } from '../transform/traits';
+import { Position, Rotation } from '../transform';
 
 export const FirstPersonController = trait({
   offset: () => new Vector3(0, 0.75, 0),

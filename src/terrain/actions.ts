@@ -5,7 +5,7 @@ import { Camera, Follows } from '../camera/traits';
 import { itemActions } from '../item/actions';
 import { BoxCollider, Velocity } from '../physics/traits';
 import { Player } from '../character/player/traits';
-import { Position, Rotation } from '../transform/traits';
+import { Position, Rotation } from '../transform';
 import { generateTerrain } from './generate';
 import { buildWorld } from './systems';
 import { Construction, type DoomedBlock, type PendingBlock, Terrain } from './traits';

@@ -1,26 +1,18 @@
 import { useAnimations, useGLTF } from '@react-three/drei/webgpu';
 import { createPortal, useFrame } from '@react-three/fiber/webgpu';
 import { Entity } from 'koota';
-import { useQuery, useQueryFirst, useTrait, useTraitEffect, useWorld } from 'koota/react';
-import { useEffect, useMemo, useRef } from 'react';
+import { useQuery, useQueryFirst, useTrait, useWorld } from 'koota/react';
+import { useEffect, useMemo } from 'react';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import {
-  AnimationClip,
-  AnimationUtils,
-  Box3,
-  type Group,
-  LoopOnce,
-  Mesh,
-  Object3D,
-  Vector3,
-} from 'three/webgpu';
+import { AnimationClip, AnimationUtils, Box3, LoopOnce, Mesh, Object3D, Vector3 } from 'three/webgpu';
 import minecraftCharacterUrl from '../../assets/minecraft-character/source/model.gltf?url';
 import { Camera, Follows, IsFirstPerson } from '../../camera/traits';
 import { ItemView } from '../../item/renderer';
 import { HeldBy, Item, ToolSwing } from '../../item/traits';
 import { BoxColliderDebug } from '../../physics/renderer';
 import { BoxCollider, Velocity } from '../../physics/traits';
-import { Position, Rotation } from '../../transform/traits';
+import { Position } from '../../transform';
+import { captureRef } from '../../view/capture-ref';
 import { IsRiding, IsWalking } from '../stateMachine';
 import { Player } from './traits';
 
@@ -41,13 +33,6 @@ function PlayerView({ entity }: { entity: Entity }) {
     return [-center.x, -bounds.min.y - (box?.size.y ?? 0) / 2, -center.z] as const;
   }, [box, model]);
 
-  const group = useRef<Group>(null);
-  useTraitEffect(entity, Position, (position) => {
-    if (position) group.current?.position.copy(position);
-  });
-  useTraitEffect(entity, Rotation, (rotation) => {
-    if (rotation) group.current?.quaternion.copy(rotation);
-  });
   const isFirstPerson = useQueryFirst(Camera, IsFirstPerson, Follows(entity)) !== undefined;
   const rightArmJoint = useMemo(() => model.getObjectByName('RightArm'), [model]);
   const heldItem = useQueryFirst(Item, HeldBy(entity));
@@ -67,7 +52,7 @@ function PlayerView({ entity }: { entity: Entity }) {
 
   return (
     <>
-      <group ref={group}>
+      <group ref={captureRef(entity)}>
         <primitive object={model} position={modelOffset} />
         {rightArmJoint &&
           heldItem &&
