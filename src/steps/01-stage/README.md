@@ -2,7 +2,7 @@
 
 Start with a visible scene so we have somewhere to build the game. Add a sky, lighting and grass.
 
-Work directly in the [src/game](../../game/) folder. Its `app.tsx` is an empty Canvas. Make the following edits there and keep using this folder for every lesson. The files beside this guide contain the completed version.
+Work directly in the [src/game](../../game/) folder. Its `app.tsx` is an empty Canvas with a note over it. Make the following edits there and keep using this folder for every lesson. The files beside this guide contain the completed version.
 
 ## 1. Sky and sun
 
